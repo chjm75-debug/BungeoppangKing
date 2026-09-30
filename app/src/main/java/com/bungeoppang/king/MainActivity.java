@@ -6,7 +6,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -26,13 +28,14 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         root = new FrameLayout(this);
-        root.setBackgroundColor(Color.rgb(31, 22, 18));
+        root.setBackgroundColor(Color.rgb(42, 29, 23));
 
         status = new TextView(this);
-        status.setText("붕어빵 장사왕\n앱 실행 중…");
+        status.setText("붕어빵 장사왕\n게임 화면 준비 중…");
         status.setTextColor(Color.WHITE);
         status.setTextSize(22f);
         status.setGravity(Gravity.CENTER);
+        status.setBackgroundColor(Color.rgb(42, 29, 23));
         status.setPadding(32, 32, 32, 32);
 
         root.addView(status, new FrameLayout.LayoutParams(
@@ -41,13 +44,13 @@ public class MainActivity extends Activity {
         ));
         setContentView(root);
 
-        new Handler(Looper.getMainLooper()).postDelayed(this::loadGameSafely, 350);
+        new Handler(Looper.getMainLooper()).postDelayed(this::loadGameSafely, 250);
     }
 
     private void loadGameSafely() {
         try {
-            webView = new WebView(getApplicationContext());
-            webView.setBackgroundColor(Color.rgb(31, 22, 18));
+            webView = new WebView(this);
+            webView.setBackgroundColor(Color.rgb(32, 23, 19));
 
             WebSettings settings = webView.getSettings();
             settings.setJavaScriptEnabled(true);
@@ -57,23 +60,18 @@ public class MainActivity extends Activity {
             settings.setAllowContentAccess(true);
             settings.setBuiltInZoomControls(false);
             settings.setDisplayZoomControls(false);
-            settings.setLoadWithOverviewMode(true);
+            settings.setLoadWithOverviewMode(false);
             settings.setUseWideViewPort(true);
             settings.setMediaPlaybackRequiresUserGesture(false);
 
+            webView.addJavascriptInterface(new ReadyBridge(), "AndroidBridge");
             webView.setWebChromeClient(new WebChromeClient());
             webView.setWebViewClient(new WebViewClient() {
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    super.onPageFinished(view, url);
-                    if (status != null) status.setVisibility(TextView.GONE);
-                }
-
                 @Override
                 public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                     super.onReceivedError(view, request, error);
                     if (request != null && request.isForMainFrame()) {
-                        showError("게임 화면을 불러오지 못했습니다.\n" +
+                        showError("게임 파일 로딩 오류\n" +
                                 (error != null ? error.getDescription() : "WebView 오류"));
                     }
                 }
@@ -83,19 +81,37 @@ public class MainActivity extends Activity {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
             ));
+
             webView.loadUrl("file:///android_asset/index.html");
+
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (status != null && status.getVisibility() == View.VISIBLE) {
+                    status.setText("게임 화면이 아직 준비되지 않았습니다.\n화면 캡처를 보내주세요.");
+                }
+            }, 5000);
         } catch (Throwable t) {
             showError("앱은 실행됐지만 게임 화면을 열지 못했습니다.\n" +
                     t.getClass().getSimpleName() + ": " + String.valueOf(t.getMessage()));
         }
     }
 
-    private void showError(String message) {
-        if (status != null) {
-            status.setVisibility(TextView.VISIBLE);
-            status.setText(message);
-            status.bringToFront();
+    private class ReadyBridge {
+        @JavascriptInterface
+        public void ready() {
+            runOnUiThread(() -> {
+                if (status != null) status.setVisibility(View.GONE);
+            });
         }
+    }
+
+    private void showError(String message) {
+        runOnUiThread(() -> {
+            if (status != null) {
+                status.setVisibility(View.VISIBLE);
+                status.setText(message);
+                status.bringToFront();
+            }
+        });
     }
 
     @Override
@@ -115,8 +131,7 @@ public class MainActivity extends Activity {
                 webView.loadUrl("about:blank");
                 webView.removeAllViews();
                 webView.destroy();
-            } catch (Throwable ignored) {
-            }
+            } catch (Throwable ignored) {}
         }
         super.onDestroy();
     }
