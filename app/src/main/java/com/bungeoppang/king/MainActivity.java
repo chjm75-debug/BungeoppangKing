@@ -10,13 +10,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 public class MainActivity extends Activity {
     private FrameLayout root;
@@ -44,13 +46,32 @@ public class MainActivity extends Activity {
         ));
         setContentView(root);
 
-        new Handler(Looper.getMainLooper()).postDelayed(this::loadGameSafely, 250);
+        new Handler(Looper.getMainLooper()).postDelayed(this::loadGameSafely, 200);
+    }
+
+    private String readAsset(String fileName) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        try (InputStream in = getAssets().open(fileName);
+             BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append('\n');
+            }
+        }
+        return sb.toString();
     }
 
     private void loadGameSafely() {
         try {
+            String html = readAsset("index.html");
+            if (!html.contains("붕어빵 장사왕") || !html.contains("id=\"app\"")) {
+                showError("게임 파일 검증 실패");
+                return;
+            }
+
             webView = new WebView(this);
-            webView.setBackgroundColor(Color.rgb(32, 23, 19));
+            webView.setBackgroundColor(Color.TRANSPARENT);
+            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
             WebSettings settings = webView.getSettings();
             settings.setJavaScriptEnabled(true);
@@ -66,32 +87,28 @@ public class MainActivity extends Activity {
 
             webView.addJavascriptInterface(new ReadyBridge(), "AndroidBridge");
             webView.setWebChromeClient(new WebChromeClient());
-            webView.setWebViewClient(new WebViewClient() {
-                @Override
-                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                    super.onReceivedError(view, request, error);
-                    if (request != null && request.isForMainFrame()) {
-                        showError("게임 파일 로딩 오류\n" +
-                                (error != null ? error.getDescription() : "WebView 오류"));
-                    }
-                }
-            });
+            webView.setWebViewClient(new WebViewClient());
 
             root.addView(webView, 0, new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
             ));
 
-            webView.loadUrl("file:///android_asset/index.html");
+            webView.loadDataWithBaseURL(
+                    "https://local.bungeoppang/",
+                    html,
+                    "text/html",
+                    "UTF-8",
+                    null
+            );
 
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (status != null && status.getVisibility() == View.VISIBLE) {
-                    status.setText("게임 화면이 아직 준비되지 않았습니다.\n화면 캡처를 보내주세요.");
+                    status.setText("게임 화면 렌더링 실패\n화면 캡처를 보내주세요.");
                 }
-            }, 5000);
+            }, 6000);
         } catch (Throwable t) {
-            showError("앱은 실행됐지만 게임 화면을 열지 못했습니다.\n" +
-                    t.getClass().getSimpleName() + ": " + String.valueOf(t.getMessage()));
+            showError("게임 시작 오류\n" + t.getClass().getSimpleName() + "\n" + String.valueOf(t.getMessage()));
         }
     }
 
@@ -116,11 +133,8 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+        if (webView != null && webView.canGoBack()) webView.goBack();
+        else super.onBackPressed();
     }
 
     @Override
@@ -128,7 +142,7 @@ public class MainActivity extends Activity {
         if (webView != null) {
             try {
                 webView.stopLoading();
-                webView.loadUrl("about:blank");
+                webView.removeJavascriptInterface("AndroidBridge");
                 webView.removeAllViews();
                 webView.destroy();
             } catch (Throwable ignored) {}
