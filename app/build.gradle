@@ -7,10 +7,10 @@ android {
     compileSdk 36
 
     defaultConfig {
-        applicationId 'com.bungeoppang.king.sept30e'
+        applicationId 'com.bungeoppang.king.sept30f'
         minSdk 23
         targetSdk 36
-        versionCode 6
-        versionName '1.5.0'
+        versionCode 7
+        versionName '1.6.0'
     }
 }
