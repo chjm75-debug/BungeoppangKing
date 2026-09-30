@@ -5,6 +5,10 @@ on:
   push:
     branches: [ main ]
 
+concurrency:
+  group: bungeoppang-build
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
