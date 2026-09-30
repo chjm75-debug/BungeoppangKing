@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Verify Android APK
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-and-install-test:
     runs-on: ubuntu-latest
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
@@ -38,17 +38,44 @@ jobs:
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
 
+      - name: Verify APK signature and manifest
+        run: |
+          $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
+          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | head -20
+          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.bungeoppang.king.sept30a'"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install and launch on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -no-boot-anim -gpu swiftshader_indirect -camera-back none -camera-front none
+          script: |
+            adb install app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -W -n com.bungeoppang.king.sept30a/com.bungeoppang.king.MainActivity
+            sleep 3
+            adb shell pidof com.bungeoppang.king.sept30a
+
       - name: Prepare release APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v1.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v1.1-fresh.apk
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BungeoppangKing-debug-apk
-          path: BungeoppangKing-v1.apk
+          name: BungeoppangKing-v1.1-fresh-apk
+          path: BungeoppangKing-v1.1-fresh.apk
           if-no-files-found: error
 
       - name: Publish GitHub Release
         run: |
-          gh release delete v1.0.0 --cleanup-tag -y || true
-          gh release create v1.0.0 BungeoppangKing-v1.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v1.0.0" --notes "정식 Android Gradle 빌드 APK"
+          gh release delete v1.1.0 --cleanup-tag -y || true
+          gh release create v1.1.0 BungeoppangKing-v1.1-fresh.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v1.1.0 fresh package" --notes "새 패키지명으로 빌드하고 apksigner 검증 및 Android 15 에뮬레이터 설치/실행 테스트를 통과한 APK"
