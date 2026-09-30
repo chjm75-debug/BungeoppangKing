@@ -5,12 +5,16 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,9 +38,17 @@ jobs:
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
 
-      - name: Upload APK
+      - name: Prepare release APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v1.apk
+
+      - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: BungeoppangKing-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: BungeoppangKing-v1.apk
           if-no-files-found: error
+
+      - name: Publish GitHub Release
+        run: |
+          gh release delete v1.0.0 --cleanup-tag -y || true
+          gh release create v1.0.0 BungeoppangKing-v1.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v1.0.0" --notes "정식 Android Gradle 빌드 APK"
