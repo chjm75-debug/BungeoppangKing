@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>붕어빵 장사왕</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#191513;color:#fff7e8;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
+button{font:inherit;color:inherit}
+#app{max-width:760px;margin:auto;padding:10px}
+.top{position:sticky;top:0;z-index:5;background:#2a211c;border:1px solid #58463a;border-radius:16px;padding:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;box-shadow:0 8px 30px #0008}
+.title{grid-column:1/-1;font-size:22px;font-weight:900}
+.stat{background:#3a2f29;border-radius:10px;padding:7px;text-align:center;font-weight:800;font-size:13px}
+.card{margin-top:10px;background:#29211d;border:1px solid #5a493e;border-radius:16px;padding:12px}
+.card h2{margin:0 0 9px;font-size:17px}.card h3{margin:12px 0 7px;font-size:14px;color:#ffd88a}
+.help{font-size:12px;line-height:1.55;color:#d9c6b3;background:#1b1714;padding:8px;border-radius:10px}
+.btn{border:0;border-radius:12px;padding:10px;font-weight:900;background:#805438;box-shadow:inset 0 -2px #0005}
+.btn:disabled{opacity:.35}.wide{width:100%}.green{background:#4f7b43}.red{background:#713b35}.blue{background:#3f6178}
+.progress{height:12px;background:#100e0d;border-radius:20px;overflow:hidden;margin:8px 0;border:1px solid #5d4c40}.progress div{height:100%;background:linear-gradient(90deg,#f2b94e,#e96b3e);width:0}
+.fillings{display:flex;gap:6px;flex-wrap:wrap}.fill{background:#493930}.fill.on{outline:2px solid #ffc84e}
+.molds{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.mold{min-height:105px;border:2px solid #66605a;border-radius:42% 42% 34% 34%/30% 30% 60% 60%;background:radial-gradient(circle,#3a3734,#22201f);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.mold .fish{font-size:34px}.mold.ready{box-shadow:inset 0 0 0 4px #ffd465;background:radial-gradient(circle,#efbd5c,#8d4b1e)}.mold.cook{background:radial-gradient(circle,#d99d47,#70401d)}.mold.batter{background:radial-gradient(circle,#f2d99d,#a46a32)}.mold.burnt{background:radial-gradient(circle,#40251b,#17110e)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.queue,.case{min-height:80px;background:#181412;border-radius:12px;padding:8px;display:flex;gap:6px;flex-wrap:wrap;align-content:flex-start}
+.case{background:linear-gradient(135deg,#cfeaff25,#ffffff08);border:1px solid #a8c6d5}
+.piece{background:#603d25;border:1px solid #a36d3d;border-radius:8px;padding:5px;font-size:22px}
+.customer{display:grid;grid-template-columns:38px 1fr auto;gap:7px;align-items:center;background:#3b302a;padding:8px;border-radius:12px;margin-top:7px}.avatar{font-size:28px}.order{font-size:13px;font-weight:800}.bar{height:6px;background:#111;border-radius:10px;overflow:hidden;margin-top:5px}.bar div{height:100%;background:#78b967}
+.upgrade{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed #56473d}.small{font-size:12px;color:#cfbdac}
+.log{height:115px;overflow:auto;background:#14110f;padding:8px;border-radius:10px;font-size:12px;color:#dac8b8}
+.modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modalbox{background:#2b221d;border:1px solid #705847;border-radius:16px;padding:18px;max-width:420px;width:100%}
+@media(min-width:620px){.molds{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="top">
+<div class="title">🐟 붕어빵 장사왕</div>
+<div class="stat">📅 <span id="day"></span>일</div>
+<div class="stat">💰 <span id="cash"></span>원</div>
+<div class="stat">🔥 <span id="openText"></span></div>
+</div>
+
+<div class="card">
+<h2>🥣 반죽</h2>
+<div class="help">반죽 만들기 → 5번 섞기 → 숙성 완료 → 틀에 붓기. 한 번 만들면 12개 분량입니다.</div>
+<div class="progress"><div id="doughBar"></div></div>
+<div id="doughText" class="small"></div>
+<button id="doughBtn" class="btn wide"></button>
+<h3>고명 선택</h3><div id="fillings" class="fillings"></div>
+</div>
+
+<div class="card">
+<h2>🔥 붕어빵 틀 <span id="moldCount"></span></h2>
+<div class="help">빈 틀 → 반죽 → 고명 → 굽기. 테두리가 반짝일 때 눌러 뒤집고, 다시 반짝일 때 꺼내세요.</div>
+<div id="molds" class="molds"></div>
+</div>
+
+<div class="row">
+<div class="card"><h2>✂️ 모양 잡기</h2><div id="queue" class="queue"></div><button id="shapeBtn" class="btn wide">집게로 정리</button></div>
+<div class="card"><h2>🪟 진열장 <span id="caseCount"></span></h2><div id="case" class="case"></div></div>
+</div>
+
+<div class="card">
+<h2>👥 손님</h2><div id="customers"></div>
+<div class="row" style="margin-top:8px"><button id="openBtn" class="btn green">영업 시작</button><button id="endBtn" class="btn red">장사 마감</button></div>
+</div>
+
+<div class="card">
+<h2>🔧 업그레이드</h2>
+<div class="upgrade"><div><b>붕어빵 틀 확장</b><div id="moldUpText" class="small"></div></div><button id="moldUpBtn" class="btn"></button></div>
+<div class="upgrade"><div><b>진열장 확장</b><div id="caseUpText" class="small"></div></div><button id="caseUpBtn" class="btn"></button></div>
+<h3>고명 해금</h3><div id="unlockBox"></div>
+</div>
+
+<div class="card"><h2>📝 장사 기록</h2><div id="log" class="log"></div></div>
+</div>
+
+<div id="modal" class="modal"><div class="modalbox"><h2>오늘 장사 끝!</h2><div id="summary"></div><button id="nextBtn" class="btn wide" style="margin-top:10px">다음 날</button></div></div>
+
+<script>
+(function(){
+var F={
+ red:{name:"팥",icon:"🫘",price:700,cost:0},
+ custard:{name:"슈크림",icon:"🍮",price:900,cost:6000},
+ cheese:{name:"치즈",icon:"🧀",price:1100,cost:10000},
+ pizza:{name:"피자",icon:"🍕",price:1400,cost:16000}
+};
+var moldLevels=[4,6,8,10,12,16],moldCosts=[4000,7500,12000,18000,27000];
+var caseLevels=[8,12,18,26,36],caseCosts=[3000,6000,10000,16000];
+var saved=localStorage.getItem("bungeoppangKing");
+var S=saved?JSON.parse(saved):{
+ day:1,cash:5000,open:false,doughStage:"idle",mix:0,fermentStart:0,dough:0,
+ selected:"red",unlocked:["red"],moldLevel:0,caseLevel:0,molds:[],queue:[],display:[],
+ customers:[],lastCustomer:0,sold:0,revenue:0,burnt:0,missed:0
+};
+function blankMolds(){S.molds=[];for(var i=0;i<moldLevels[S.moldLevel];i++)S.molds.push({stage:"empty",fill:null,t:0,q:"normal"});}
+if(!S.molds||S.molds.length!==moldLevels[S.moldLevel])blankMolds();
+function save(){localStorage.setItem("bungeoppangKing",JSON.stringify(S));}
+function fmt(n){return Math.round(n).toLocaleString("ko-KR");}
+function log(t){var e=document.getElementById("log"),d=document.createElement("div");d.textContent="• "+t;e.prepend(d);while(e.children.length>50)e.lastChild.remove();}
+function beep(type){try{var A=window.AudioContext||window.webkitAudioContext;var a=new A(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=type==="bad"?150:type==="coin"?820:520;g.gain.value=.05;o.start();o.stop(a.currentTime+.08);}catch(e){}}
+function doughProgress(){
+ if(S.doughStage==="idle")return 0;
+ if(S.doughStage==="mix")return S.mix*12;
+ if(S.doughStage==="ferment"){return 60+Math.min(40,(Date.now()-S.fermentStart)/100);}
+ return 100;
+}
+function render(){
+ document.getElementById("day").textContent=S.day;
+ document.getElementById("cash").textContent=fmt(S.cash);
+ document.getElementById("openText").textContent=S.open?"영업 중":"영업 전";
+ document.getElementById("doughBar").style.width=doughProgress()+"%";
+ var db=document.getElementById("doughBtn"),dt=document.getElementById("doughText");
+ if(S.doughStage==="idle"){db.textContent="반죽 만들기 · 500원";db.disabled=S.cash<500;dt.textContent="반죽통이 비어 있습니다.";}
+ else if(S.doughStage==="mix"){db.textContent="반죽 섞기 ("+S.mix+"/5)";db.disabled=false;dt.textContent="잘 섞어 주세요.";}
+ else if(S.doughStage==="ferment"){db.textContent="숙성 중...";db.disabled=true;dt.textContent="잠시 기다리면 12개 분량이 완성됩니다.";}
+ else{db.textContent="반죽 준비 완료";db.disabled=true;dt.textContent="남은 반죽 "+S.dough+"개 분량";}
+ renderFillings();renderMolds();renderQueue();renderCase();renderCustomers();renderUpgrades();
+ document.getElementById("openBtn").disabled=S.open;
+ document.getElementById("endBtn").disabled=!S.open;
+ save();
+}
+document.getElementById("doughBtn").onclick=function(){
+ if(S.doughStage==="idle"){if(S.cash<500)return;S.cash-=500;S.doughStage="mix";S.mix=0;log("반죽 재료를 준비했습니다.");}
+ else if(S.doughStage==="mix"){S.mix++;beep("tap");if(S.mix>=5){S.doughStage="ferment";S.fermentStart=Date.now();log("반죽 숙성을 시작했습니다.");}}
+ render();
+};
+function renderFillings(){
+ var box=document.getElementById("fillings");box.innerHTML="";
+ Object.keys(F).forEach(function(k){var b=document.createElement("button");b.className="btn fill"+(S.selected===k?" on":"");b.textContent=F[k].icon+" "+F[k].name+(S.unlocked.indexOf(k)>=0?"":" 🔒");b.disabled=S.unlocked.indexOf(k)<0;b.onclick=function(){S.selected=k;render();};box.appendChild(b);});
+}
+function stageText(m){
+ if(m.stage==="empty")return "빈 틀";
+ if(m.stage==="batter")return "고명 넣기";
+ if(m.stage==="cook1")return "앞면 굽는 중";
+ if(m.stage==="flip")return "지금 뒤집기!";
+ if(m.stage==="cook2")return "뒷면 굽는 중";
+ if(m.stage==="out")return "지금 꺼내기!";
+ return "탔어요 · 버리기";
+}
+function renderMolds(){
+ var box=document.getElementById("molds");box.innerHTML="";document.getElementById("moldCount").textContent="("+S.molds.length+"구)";
+ S.molds.forEach(function(m,i){var b=document.createElement("button");b.className="mold "+(m.stage==="batter"?"batter":m.stage==="cook1"||m.stage==="cook2"?"cook":m.stage==="flip"||m.stage==="out"?"ready":m.stage==="burnt"?"burnt":"");b.innerHTML='<span class="fish">'+(m.stage==="burnt"?"💀":"🐟")+'</span><b>'+stageText(m)+'</b>';b.onclick=function(){clickMold(i);};box.appendChild(b);});
+}
+function clickMold(i){
+ var m=S.molds[i],now=Date.now();
+ if(m.stage==="empty"){if(S.dough<=0){log("사용할 반죽이 없습니다.");return;}S.dough--;m.stage="batter";if(S.dough===0)S.doughStage="idle";log((i+1)+"번 틀에 반죽을 부었습니다.");}
+ else if(m.stage==="batter"){m.fill=S.selected;m.stage="cook1";m.t=now;m.q="normal";log(F[m.fill].name+" 고명을 넣었습니다.");}
+ else if(m.stage==="flip"){m.q=now-m.t<1600?"perfect":"normal";m.stage="cook2";m.t=now;beep("coin");}
+ else if(m.stage==="out"){S.queue.push({fill:m.fill,q:m.q});S.molds[i]={stage:"empty",fill:null,t:0,q:"normal"};beep("coin");}
+ else if(m.stage==="burnt"){S.burnt++;S.molds[i]={stage:"empty",fill:null,t:0,q:"normal"};log("탄 붕어빵을 버렸습니다.");}
+ render();
+}
+function renderQueue(){var q=document.getElementById("queue");q.innerHTML="";S.queue.forEach(function(x){var d=document.createElement("div");d.className="piece";d.textContent="🐟"+F[x.fill].icon+(x.q==="perfect"?"★":"");q.appendChild(d);});document.getElementById("shapeBtn").disabled=!S.queue.length||S.display.length>=caseLevels[S.caseLevel];}
+document.getElementById("shapeBtn").onclick=function(){if(!S.queue.length||S.display.length>=caseLevels[S.caseLevel])return;S.display.push(S.queue.shift());beep("tap");render();};
+function renderCase(){var c=document.getElementById("case");c.innerHTML="";S.display.forEach(function(x){var d=document.createElement("div");d.className="piece";d.textContent="🐟"+F[x.fill].icon+(x.q==="perfect"?"★":"");c.appendChild(d);});document.getElementById("caseCount").textContent="("+S.display.length+"/"+caseLevels[S.caseLevel]+")";}
+var avatars=["🧑🏻","👩🏻","👨🏻","👵🏻","👴🏻","🧒🏻"];
+function spawnCustomer(){if(!S.open||S.customers.length>=3)return;var f=S.unlocked[Math.floor(Math.random()*S.unlocked.length)],qty=1+Math.floor(Math.random()*Math.min(3,1+Math.floor(S.day/2)));S.customers.push({id:Date.now()+Math.random(),avatar:avatars[Math.floor(Math.random()*avatars.length)],fill:f,qty:qty,born:Date.now(),wait:20000});log("손님 주문: "+F[f].name+" "+qty+"개");}
+function renderCustomers(){
+ var box=document.getElementById("customers");box.innerHTML="";
+ if(!S.customers.length){box.innerHTML='<div class="small">'+(S.open?"손님을 기다리는 중입니다…":"영업을 시작해 주세요.")+'</div>';return;}
+ S.customers.forEach(function(c){var remain=Math.max(0,1-(Date.now()-c.born)/c.wait),d=document.createElement("div");d.className="customer";d.innerHTML='<div class="avatar">'+c.avatar+'</div><div><div class="order">'+F[c.fill].icon+" "+F[c.fill].name+" "+c.qty+'개 주세요!</div><div class="bar"><div style="width:'+(remain*100)+'%"></div></div></div><button class="btn green">판매</button>';d.querySelector("button").onclick=function(){sell(c.id);};box.appendChild(d);});
+}
+function sell(id){
+ var c=S.customers.find(function(x){return x.id===id;});if(!c)return;
+ var idx=[];S.display.forEach(function(x,i){if(x.fill===c.fill&&idx.length<c.qty)idx.push(i);});
+ if(idx.length<c.qty){log(F[c.fill].name+" 재고가 부족합니다.");beep("bad");return;}
+ var money=0;idx.reverse().forEach(function(i){var x=S.display[i];money+=F[x.fill].price*(x.q==="perfect"?1.25:1);S.display.splice(i,1);});
+ money=Math.round(money/100)*100;S.cash+=money;S.sold+=c.qty;S.revenue+=money;S.customers=S.customers.filter(function(x){return x.id!==id;});log("판매 +"+fmt(money)+"원");beep("coin");render();
+}
+document.getElementById("openBtn").onclick=function(){S.open=true;S.lastCustomer=0;log(S.day+"일차 영업 시작!");render();};
+document.getElementById("endBtn").onclick=function(){if(!S.open)return;S.open=false;S.customers=[];document.getElementById("summary").innerHTML="<p>판매량: <b>"+S.sold+"개</b></p><p>매출: <b>"+fmt(S.revenue)+"원</b></p><p>탄 붕어빵: <b>"+S.burnt+"개</b></p><p>놓친 손님: <b>"+S.missed+"명</b></p><p>현재 자금: <b>"+fmt(S.cash)+"원</b></p>";document.getElementById("modal").classList.add("show");render();};
+document.getElementById("nextBtn").onclick=function(){S.day++;S.sold=0;S.revenue=0;S.burnt=0;S.missed=0;document.getElementById("modal").classList.remove("show");log(S.day+"일차 준비 시작.");render();};
+function renderUpgrades(){
+ var ml=S.moldLevel,mb=document.getElementById("moldUpBtn");document.getElementById("moldUpText").textContent=ml<moldLevels.length-1?moldLevels[ml]+"구 → "+moldLevels[ml+1]+"구":"최대";mb.textContent=ml<moldCosts.length?fmt(moldCosts[ml])+"원":"MAX";mb.disabled=ml>=moldCosts.length||S.cash<moldCosts[ml]||S.molds.some(function(m){return m.stage!=="empty";});
+ var cl=S.caseLevel,cb=document.getElementById("caseUpBtn");document.getElementById("caseUpText").textContent=cl<caseLevels.length-1?caseLevels[cl]+"개 → "+caseLevels[cl+1]+"개":"최대";cb.textContent=cl<caseCosts.length?fmt(caseCosts[cl])+"원":"MAX";cb.disabled=cl>=caseCosts.length||S.cash<caseCosts[cl];
+ var ub=document.getElementById("unlockBox");ub.innerHTML="";Object.keys(F).forEach(function(k){if(!F[k].cost)return;var d=document.createElement("div"),un=S.unlocked.indexOf(k)>=0;d.className="upgrade";d.innerHTML='<div><b>'+F[k].icon+" "+F[k].name+'</b><div class="small">판매가 '+fmt(F[k].price)+'원</div></div><button class="btn">'+(un?"해금됨":fmt(F[k].cost)+"원")+'</button>';var b=d.querySelector("button");b.disabled=un||S.cash<F[k].cost;b.onclick=function(){if(un||S.cash<F[k].cost)return;S.cash-=F[k].cost;S.unlocked.push(k);log(F[k].name+" 해금!");render();};ub.appendChild(d);});
+}
+document.getElementById("moldUpBtn").onclick=function(){var i=S.moldLevel;if(i>=moldCosts.length||S.cash<moldCosts[i])return;S.cash-=moldCosts[i];S.moldLevel++;blankMolds();log("틀을 "+moldLevels[S.moldLevel]+"구로 확장했습니다.");render();};
+document.getElementById("caseUpBtn").onclick=function(){var i=S.caseLevel;if(i>=caseCosts.length||S.cash<caseCosts[i])return;S.cash-=caseCosts[i];S.caseLevel++;log("진열장을 확장했습니다.");render();};
+setInterval(function(){
+ var now=Date.now();
+ if(S.doughStage==="ferment"&&now-S.fermentStart>=10000){S.doughStage="ready";S.dough=12;log("반죽 숙성 완료! 12개 분량 준비됐습니다.");beep("coin");}
+ S.molds.forEach(function(m){if(m.stage==="cook1"&&now-m.t>=3500){m.stage="flip";m.t=now;beep("coin");}else if(m.stage==="flip"&&now-m.t>=5500){m.stage="burnt";beep("bad");}else if(m.stage==="cook2"&&now-m.t>=2600){m.stage="out";m.t=now;beep("coin");}else if(m.stage==="out"&&now-m.t>=5500){m.stage="burnt";beep("bad");}});
+ if(S.open){if(!S.lastCustomer||now-S.lastCustomer>Math.max(3500,6500-S.day*100)){spawnCustomer();S.lastCustomer=now;}var before=S.customers.length;S.customers=S.customers.filter(function(c){return now-c.born<c.wait;});if(S.customers.length<before){S.missed+=before-S.customers.length;log("기다리던 손님이 돌아갔습니다.");}}
+ render();
+},350);
+log("게임 준비 완료. 반죽부터 만들어 보세요.");
+render();
+})();
+</script>
+</body>
+</html>
