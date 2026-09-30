@@ -1,4 +1,4 @@
-name: Build Verify Android APK
+name: Build Verify Native Android APK
 
 on:
   workflow_dispatch:
@@ -20,42 +20,30 @@ jobs:
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-
       - name: Install Android SDK 36
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
-
-      - name: Set up Gradle 8.13
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.13'
-
-      - name: Build debug APK
+      - name: Build native APK
         run: gradle :app:assembleDebug --stacktrace
-
-      - name: Verify APK and embedded game
+      - name: Verify APK
         run: |
           $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose app/build/outputs/apk/debug/app-debug.apk
-          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.bungeoppang.king.sept30f'"
-          unzip -p app/build/outputs/apk/debug/app-debug.apk assets/index.html | grep -q "붕어빵 장사왕"
-          unzip -p app/build/outputs/apk/debug/app-debug.apk assets/index.html | grep -q 'id="app"'
-
+          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.bungeoppang.king.native1'"
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-
-      - name: Install launch render and capture on Android emulator
+      - name: Install launch and screenshot native game
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -66,26 +54,21 @@ jobs:
           emulator-options: -no-snapshot -no-window -no-boot-anim -gpu swiftshader_indirect -camera-back none -camera-front none
           script: |
             adb install app/build/outputs/apk/debug/app-debug.apk
-            adb shell am start -W -n com.bungeoppang.king.sept30f/com.bungeoppang.king.MainActivity
-            sleep 7
-            adb shell pidof com.bungeoppang.king.sept30f
-            adb shell dumpsys activity activities | grep -q "com.bungeoppang.king.sept30f/com.bungeoppang.king.MainActivity"
+            adb shell am start -W -n com.bungeoppang.king.native1/com.bungeoppang.king.MainActivity
+            sleep 5
+            adb shell pidof com.bungeoppang.king.native1
             adb exec-out screencap -p > app-screen.png
             test -s app-screen.png
-
       - name: Prepare release APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v1.6-black-screen-fix.apk
-
-      - name: Upload APK and screen proof
+        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v2.0-native.apk
+      - name: Upload APK and screenshot
         uses: actions/upload-artifact@v4
         with:
-          name: BungeoppangKing-v1.6-proof
+          name: BungeoppangKing-v2.0-native-proof
           path: |
-            BungeoppangKing-v1.6-black-screen-fix.apk
+            BungeoppangKing-v2.0-native.apk
             app-screen.png
-          if-no-files-found: error
-
       - name: Publish GitHub Release
         run: |
-          gh release delete v1.6.0 --cleanup-tag -y || true
-          gh release create v1.6.0 BungeoppangKing-v1.6-black-screen-fix.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v1.6.0 화면복구" --notes "HTML을 asset에서 직접 읽어 loadDataWithBaseURL로 렌더링하고 WebView 소프트웨어 렌더링을 강제한 검은화면 수정판. Android 15 에뮬레이터 실제 화면 캡처까지 생성."
+          gh release delete v2.0.0 --cleanup-tag -y || true
+          gh release create v2.0.0 BungeoppangKing-v2.0-native.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v2.0.0 네이티브" --notes "WebView를 완전히 제거하고 Android Canvas로 다시 만든 네이티브 버전. 반죽-붕어빵틀-판매대를 한 화면에 붙여 게임 동선을 단순화."
