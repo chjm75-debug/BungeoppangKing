@@ -45,7 +45,7 @@ jobs:
       - name: Verify APK signature and manifest
         run: |
           $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
-          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.bungeoppang.king.sept30c'"
+          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.bungeoppang.king.sept30d'"
 
       - name: Enable KVM
         run: |
@@ -53,7 +53,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Install and launch on Android emulator
+      - name: Install launch and keep alive on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -64,21 +64,22 @@ jobs:
           emulator-options: -no-snapshot -no-window -no-boot-anim -gpu swiftshader_indirect -camera-back none -camera-front none
           script: |
             adb install app/build/outputs/apk/debug/app-debug.apk
-            adb shell am start -W -n com.bungeoppang.king.sept30c/com.bungeoppang.king.MainActivity
-            sleep 3
-            adb shell pidof com.bungeoppang.king.sept30c
+            adb shell am start -W -n com.bungeoppang.king.sept30d/com.bungeoppang.king.MainActivity
+            sleep 5
+            adb shell pidof com.bungeoppang.king.sept30d
+            adb shell dumpsys activity activities | grep -q "com.bungeoppang.king.sept30d/com.bungeoppang.king.MainActivity"
 
       - name: Prepare release APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v1.3-simple.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v1.4-safe.apk
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BungeoppangKing-v1.3-simple-apk
-          path: BungeoppangKing-v1.3-simple.apk
+          name: BungeoppangKing-v1.4-safe-apk
+          path: BungeoppangKing-v1.4-safe.apk
           if-no-files-found: error
 
       - name: Publish GitHub Release
         run: |
-          gh release delete v1.3.0 --cleanup-tag -y || true
-          gh release create v1.3.0 BungeoppangKing-v1.3-simple.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v1.3.0 간결화" --notes "메인 게임 화면 단순화, 붕어빵틀과 판매대 인접 배치, 관리 UI 팝업 분리, 철제 뒤집기 효과음 개선. Android 15 에뮬레이터 설치/실행 테스트 통과 후 배포."
+          gh release delete v1.4.0 --cleanup-tag -y || true
+          gh release create v1.4.0 BungeoppangKing-v1.4-safe.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v1.4.0 실행안정화" --notes "네이티브 시작화면을 먼저 표시하고 WebView 게임을 안전하게 로딩하도록 수정. 전체화면 강제 코드를 제거하고 Android 15 에뮬레이터에서 설치, 실행, 5초 생존 및 포그라운드 Activity 확인 후 배포."
