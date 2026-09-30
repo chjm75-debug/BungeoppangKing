@@ -41,7 +41,7 @@ jobs:
       - name: Verify APK signature and manifest
         run: |
           $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
-          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.bungeoppang.king.sept30b'"
+          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.bungeoppang.king.sept30c'"
 
       - name: Enable KVM
         run: |
@@ -60,21 +60,21 @@ jobs:
           emulator-options: -no-snapshot -no-window -no-boot-anim -gpu swiftshader_indirect -camera-back none -camera-front none
           script: |
             adb install app/build/outputs/apk/debug/app-debug.apk
-            adb shell am start -W -n com.bungeoppang.king.sept30b/com.bungeoppang.king.MainActivity
+            adb shell am start -W -n com.bungeoppang.king.sept30c/com.bungeoppang.king.MainActivity
             sleep 3
-            adb shell pidof com.bungeoppang.king.sept30b
+            adb shell pidof com.bungeoppang.king.sept30c
 
       - name: Prepare release APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v1.2-stall.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v1.3-simple.apk
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BungeoppangKing-v1.2-stall-apk
-          path: BungeoppangKing-v1.2-stall.apk
+          name: BungeoppangKing-v1.3-simple-apk
+          path: BungeoppangKing-v1.3-simple.apk
           if-no-files-found: error
 
       - name: Publish GitHub Release
         run: |
-          gh release delete v1.2.0 --cleanup-tag -y || true
-          gh release create v1.2.0 BungeoppangKing-v1.2-stall.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v1.2.0 포장마차 리디자인" --notes "겨울 붕어빵 포장마차 디자인 리디자인. 새 패키지로 빌드하고 APK 서명 검증 및 Android 15 에뮬레이터 설치/실행 테스트를 통과한 APK."
+          gh release delete v1.3.0 --cleanup-tag -y || true
+          gh release create v1.3.0 BungeoppangKing-v1.3-simple.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v1.3.0 간결화" --notes "메인 게임 화면 단순화, 붕어빵틀과 판매대 인접 배치, 관리 UI 팝업 분리, 철제 뒤집기 효과음 개선. Android 15 에뮬레이터 설치/실행 테스트 통과 후 배포."
