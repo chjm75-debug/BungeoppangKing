@@ -1,195 +1,571 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <title>붕어빵 장사왕</title>
 <style>
+:root{
+  --bg:#171412; --panel:#2c231f; --panel2:#362b26; --line:#614d41;
+  --text:#fff8ee; --muted:#d1c0ae; --gold:#ffbf47; --hot:#de6539;
+  --green:#78b967; --glass:#d5eef61a;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:#191513;color:#fff7e8;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
+body{margin:0;background:linear-gradient(180deg,#171412,#241b17 55%,#16110f);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;min-height:100vh}
 button{font:inherit;color:inherit}
-#app{max-width:760px;margin:auto;padding:10px}
-.top{position:sticky;top:0;z-index:5;background:#2a211c;border:1px solid #58463a;border-radius:16px;padding:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;box-shadow:0 8px 30px #0008}
-.title{grid-column:1/-1;font-size:22px;font-weight:900}
-.stat{background:#3a2f29;border-radius:10px;padding:7px;text-align:center;font-weight:800;font-size:13px}
-.card{margin-top:10px;background:#29211d;border:1px solid #5a493e;border-radius:16px;padding:12px}
-.card h2{margin:0 0 9px;font-size:17px}.card h3{margin:12px 0 7px;font-size:14px;color:#ffd88a}
-.help{font-size:12px;line-height:1.55;color:#d9c6b3;background:#1b1714;padding:8px;border-radius:10px}
-.btn{border:0;border-radius:12px;padding:10px;font-weight:900;background:#805438;box-shadow:inset 0 -2px #0005}
-.btn:disabled{opacity:.35}.wide{width:100%}.green{background:#4f7b43}.red{background:#713b35}.blue{background:#3f6178}
-.progress{height:12px;background:#100e0d;border-radius:20px;overflow:hidden;margin:8px 0;border:1px solid #5d4c40}.progress div{height:100%;background:linear-gradient(90deg,#f2b94e,#e96b3e);width:0}
-.fillings{display:flex;gap:6px;flex-wrap:wrap}.fill{background:#493930}.fill.on{outline:2px solid #ffc84e}
-.molds{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
-.mold{min-height:105px;border:2px solid #66605a;border-radius:42% 42% 34% 34%/30% 30% 60% 60%;background:radial-gradient(circle,#3a3734,#22201f);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
-.mold .fish{font-size:34px}.mold.ready{box-shadow:inset 0 0 0 4px #ffd465;background:radial-gradient(circle,#efbd5c,#8d4b1e)}.mold.cook{background:radial-gradient(circle,#d99d47,#70401d)}.mold.batter{background:radial-gradient(circle,#f2d99d,#a46a32)}.mold.burnt{background:radial-gradient(circle,#40251b,#17110e)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.queue,.case{min-height:80px;background:#181412;border-radius:12px;padding:8px;display:flex;gap:6px;flex-wrap:wrap;align-content:flex-start}
-.case{background:linear-gradient(135deg,#cfeaff25,#ffffff08);border:1px solid #a8c6d5}
-.piece{background:#603d25;border:1px solid #a36d3d;border-radius:8px;padding:5px;font-size:22px}
-.customer{display:grid;grid-template-columns:38px 1fr auto;gap:7px;align-items:center;background:#3b302a;padding:8px;border-radius:12px;margin-top:7px}.avatar{font-size:28px}.order{font-size:13px;font-weight:800}.bar{height:6px;background:#111;border-radius:10px;overflow:hidden;margin-top:5px}.bar div{height:100%;background:#78b967}
-.upgrade{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed #56473d}.small{font-size:12px;color:#cfbdac}
-.log{height:115px;overflow:auto;background:#14110f;padding:8px;border-radius:10px;font-size:12px;color:#dac8b8}
-.modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modalbox{background:#2b221d;border:1px solid #705847;border-radius:16px;padding:18px;max-width:420px;width:100%}
-@media(min-width:620px){.molds{grid-template-columns:repeat(4,1fr)}}
+#app{max-width:1180px;margin:auto;padding:10px}
+.topbar{display:grid;grid-template-columns:1.4fr repeat(4,auto);gap:8px;align-items:center;background:#241b18;border:1px solid var(--line);border-radius:18px;padding:10px 12px;position:sticky;top:0;z-index:5;box-shadow:0 10px 26px #0008}
+.brand{font-weight:900;font-size:21px;letter-spacing:-.4px}
+.weather{font-size:13px;color:#f7d592}
+.stat{background:#3a302b;border:1px solid #675348;padding:8px 10px;border-radius:12px;white-space:nowrap;font-weight:900}
+.badge{display:inline-block;border-radius:999px;background:#6b4c35;padding:3px 8px;margin-left:4px;font-size:11px}
+.grid{display:grid;grid-template-columns:1.18fr .9fr;gap:10px;margin-top:10px}
+.panel{background:linear-gradient(180deg,var(--panel),#211915);border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:0 10px 30px #0004}
+.panel h2{margin:0 0 10px;font-size:17px}
+.panel h3{margin:12px 0 8px;font-size:15px;color:#ffe1a0}
+.help{font-size:12px;line-height:1.55;background:#1d1714;border-radius:12px;padding:9px;margin-bottom:10px;color:#e2d2c3}
+.note{color:var(--muted);font-size:12px;line-height:1.45}
+.kitchen{display:grid;grid-template-columns:1fr 1.25fr;gap:10px}
+.card{background:#332823;border:1px solid #5d4a3f;border-radius:15px;padding:10px}
+.bigButton,.ingredientBtn,.buy,.tab{border:0;border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer;box-shadow:inset 0 -2px #0005}
+.bigButton{width:100%;background:linear-gradient(#ee8d4f,#bc5836);font-size:15px}
+.bigButton.secondary{background:#4a5a69}
+.bigButton.green{background:#4d7d42}
+.bigButton.danger{background:#6e3933}
+.bigButton:disabled,.ingredientBtn:disabled,.buy:disabled,.tab:disabled{opacity:.38;cursor:not-allowed}
+.progress{height:13px;background:#151211;border-radius:999px;overflow:hidden;border:1px solid #5f4c3f;margin:8px 0}
+.progress>div{height:100%;width:0;background:linear-gradient(90deg,#f1b54e,#ef7041);transition:width .25s}
+.ingredients{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ingredientBtn{padding:8px 9px;background:#4a3c34;font-size:13px}
+.ingredientBtn.active{outline:2px solid var(--gold);background:#654b30}
+.moldWrap{position:relative;background:linear-gradient(180deg,#25211f,#0f0d0c);border:6px solid #4a4641;border-radius:22px;padding:10px;box-shadow:inset 0 0 40px #000, 0 4px 20px #0006}
+.moldWrap:before,.moldWrap:after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#a3a09a,#4b4946 58%,#1a1817 70%);top:8px}
+.moldWrap:before{left:8px}.moldWrap:after{right:8px}
+.molds{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mold{position:relative;min-height:150px;border-radius:20px;border:2px solid #77716b;background:radial-gradient(circle at 50% 35%,#5a534d 0,#302d29 50%,#161412 100%);overflow:hidden;cursor:pointer;box-shadow:inset 0 0 30px #000}
+.mold:before{content:"";position:absolute;inset:8px;border-radius:18px;background:linear-gradient(180deg,#4e4944,#24211f)}
+.mold.empty:after,.mold.batter:after,.mold.cook1:after,.mold.flipReady:after,.mold.cook2:after,.mold.outReady:after,.mold.burnt:after{content:"";position:absolute;inset:14px 12px;background:radial-gradient(circle at 30% 30%,#4a4540,#1d1b19 60%);clip-path:polygon(10% 47%,17% 35%,28% 26%,43% 21%,57% 24%,67% 31%,75% 25%,85% 23%,79% 34%,88% 47%,78% 61%,84% 73%,73% 68%,65% 74%,58% 80%,44% 82%,31% 77%,18% 65%);opacity:.95;box-shadow:inset 0 0 20px #000}
+.moldLabel{position:absolute;left:6px;right:6px;bottom:7px;font-size:11px;font-weight:900;text-align:center;color:#f4ece0;text-shadow:0 1px 1px #000;z-index:3}
+.fishArt{position:absolute;inset:18px 12px 28px;display:none;align-items:center;justify-content:center;z-index:2}
+.fishBody{position:relative;width:100%;height:100%;clip-path:polygon(10% 47%,17% 35%,28% 26%,43% 21%,57% 24%,67% 31%,75% 25%,85% 23%,79% 34%,88% 47%,78% 61%,84% 73%,73% 68%,65% 74%,58% 80%,44% 82%,31% 77%,18% 65%);border-radius:10px}
+.fishBody .eye{position:absolute;width:8px;height:8px;border-radius:50%;background:#2b231e;top:35%;left:63%;box-shadow:0 0 0 2px #fff6cc66}
+.fishBody .gill{position:absolute;width:18%;height:22%;border-left:2px solid #7c5529;top:35%;left:54%;transform:rotate(-8deg);opacity:.8}
+.fishBody .fin{position:absolute;width:14%;height:12%;background:#8e6130;top:25%;left:35%;clip-path:polygon(0 100%,50% 0,100% 100%);opacity:.8}
+.fishBody .tailFin{position:absolute;width:15%;height:22%;background:#8b5b29;right:8%;top:34%;clip-path:polygon(0 50%,100% 0,78% 50%,100% 100%);opacity:.85}
+.fishBody .scale{position:absolute;inset:18% 20% 22% 22%;background:repeating-radial-gradient(circle at 8px 8px,#0000 0 8px,#835828 9px 11px,#0000 12px 18px);opacity:.18;mix-blend-mode:multiply}
+.fishBody .shine{position:absolute;inset:10% 20% 32% 14%;background:linear-gradient(160deg,#ffffff55,#fff0 55%);filter:blur(2px)}
+.mold.batter .fishArt,.mold.cook1 .fishArt,.mold.flipReady .fishArt,.mold.cook2 .fishArt,.mold.outReady .fishArt,.mold.burnt .fishArt{display:flex}
+.mold.batter .fishBody{background:linear-gradient(180deg,#f8ddb0 0,#efc986 52%,#cd9552 100%)}
+.mold.cook1 .fishBody{background:linear-gradient(180deg,#efc679 0,#d98c43 52%,#ad5d24 100%)}
+.mold.flipReady .fishBody,.mold.outReady .fishBody{background:linear-gradient(180deg,#efcf86 0,#d68f43 48%,#a95a23 100%);box-shadow:0 0 0 3px #ffd97377}
+.mold.cook2 .fishBody{background:linear-gradient(180deg,#edcb82 0,#cc7a32 50%,#8d431b 100%)}
+.mold.burnt .fishBody{background:linear-gradient(180deg,#5b3928 0,#2b1811 56%,#120c0a 100%)}
+.mold.flipReady,.mold.outReady{animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:inset 0 0 0 4px #ffd97088, 0 0 0 2px #ffd97033}}
+.case{background:linear-gradient(135deg,var(--glass),#ffffff0b);border:2px solid #bdd5e0;border-radius:15px;padding:10px;min-height:142px}
+.caseShelf{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+.item{position:relative;width:68px;height:42px;border-radius:13px;background:linear-gradient(180deg,#efcb80,#b46a2b);border:1px solid #a06f43;box-shadow:inset 0 -8px 10px #87451d55, 0 2px 5px #0004}
+.item:before{content:"";position:absolute;inset:4px 6px;background:repeating-radial-gradient(circle at 6px 6px,#0000 0 7px,#835828 8px 9px,#0000 10px 15px);clip-path:polygon(6% 50%,14% 34%,28% 22%,44% 16%,58% 18%,71% 28%,78% 21%,92% 18%,84% 32%,95% 50%,84% 66%,90% 79%,77% 73%,68% 80%,56% 85%,42% 84%,26% 76%,14% 65%);opacity:.22}
+.item:after{content:"";position:absolute;inset:2px 7px 11px 7px;background:linear-gradient(160deg,#fff7cc77,#0000 60%);clip-path:polygon(6% 50%,14% 34%,28% 22%,44% 16%,58% 18%,71% 28%,78% 21%,92% 18%,84% 32%,95% 50%,84% 66%,90% 79%,77% 73%,68% 80%,56% 85%,42% 84%,26% 76%,14% 65%)}
+.item span{position:absolute;right:-4px;top:-6px;font-size:10px;background:#171717;border-radius:10px;padding:1px 5px;border:1px solid #5e5349}
+.queue{display:flex;gap:6px;flex-wrap:wrap;min-height:44px;margin:6px 0}
+.rawFish{background:#5a351f;border:1px solid #a06b38;border-radius:10px;padding:7px 8px;font-size:13px}
+.customer{background:linear-gradient(135deg,#40332c,#2e2723);border:1px solid #655248;border-radius:13px;padding:9px;margin-bottom:8px;display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center}
+.avatar{font-size:30px;text-align:center}
+.order{font-size:13px;font-weight:900}
+.patience{height:6px;background:#111;border-radius:10px;overflow:hidden;margin-top:5px}
+.patience div{height:100%;background:var(--green)}
+.sell{border:0;border-radius:10px;background:#4f7b43;padding:8px;font-weight:900}
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tab{flex:1;border:1px solid #604e42;background:#332a25}
+.tab.active{background:#725439}
+.upgrade{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-bottom:1px dashed #56483f;padding:9px 0}
+.upgrade:last-child{border-bottom:0}
+.upgrade b{display:block}.upgrade span{font-size:12px;color:var(--muted)}
+.buy{background:#8b6038;padding:8px 9px;white-space:nowrap}
+.log{height:120px;overflow:auto;background:#151311;border:1px solid #463a33;border-radius:12px;padding:8px;font-size:12px;color:#e8d8c6}
+.log div{margin:0 0 4px}
+.footerActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:25;padding:16px}
+.modal.show{display:flex}
+.modalCard{max-width:520px;width:100%;background:#2a221e;border:1px solid #745b49;border-radius:18px;padding:18px;box-shadow:0 20px 60px #000}
+.modalCard h2{margin-top:0}
+.summary{display:grid;grid-template-columns:1fr auto;gap:6px;font-size:14px}
+.summary div:nth-child(even){font-weight:900}
+.mixModal .modalCard{max-width:460px}
+.mixScene{display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 0 10px}
+.bowl{position:relative;width:220px;height:130px;border-radius:0 0 100px 100px / 0 0 78px 78px;background:linear-gradient(180deg,#ddd8d1 0,#a7a29c 25%,#eee7da 26%,#fdf7ec 44%,#e8d4a9 45%,#ddc08a 100%);border:3px solid #8d8377;overflow:hidden;box-shadow:inset 0 -10px 18px #a06c2e33, 0 6px 16px #0005}
+.batterSurface{position:absolute;left:10px;right:10px;top:30px;height:74px;border-radius:50%;background:radial-gradient(circle at 50% 30%,#f9e8bf 0,#efcf8d 65%,#deaa63 100%);overflow:hidden}
+.batterSurface:before{content:"";position:absolute;inset:0;background:repeating-radial-gradient(circle at 20px 18px,#0000 0 9px,#f7e6b9 10px 12px,#0000 13px 30px);opacity:.28}
+.whisk{position:absolute;width:110px;height:110px;top:-12px;left:58px;transform-origin:55px 68px}
+.whisk.animate{animation:whiskMove .55s ease-in-out infinite alternate}
+@keyframes whiskMove{0%{transform:rotate(-22deg) translateX(-10px)}100%{transform:rotate(18deg) translateX(10px)}}
+.handle{position:absolute;width:20px;height:62px;border-radius:12px;background:linear-gradient(180deg,#ad7d50,#6d4527);left:45px;top:0;box-shadow:inset 0 -4px 6px #0004}
+.wire{position:absolute;left:50%;top:52px;width:2px;height:40px;background:#ccc;box-shadow:-12px 0 0 #ccc,12px 0 0 #ccc,-20px 6px 0 #ccc,20px 6px 0 #ccc}
+.wire:before,.wire:after{content:"";position:absolute;width:38px;height:28px;border:3px solid #d4d4d4;border-top:none;border-radius:0 0 50% 50%;left:-18px;top:8px}
+.wire:after{transform:scaleX(.66);left:-12px;opacity:.8}
+.mixDots{display:flex;gap:7px}.mixDots span{width:10px;height:10px;border-radius:50%;background:#7c674f;opacity:.25}.mixDots span.on{background:#ffd06a;opacity:1;box-shadow:0 0 10px #ffcf5c}
+.soundTag{display:inline-block;background:#463930;border:1px solid #67564a;color:#f2ddb1;border-radius:999px;padding:2px 8px;font-size:11px;margin-left:6px}
+@media(max-width:850px){
+ .grid,.kitchen{grid-template-columns:1fr}
+ .topbar{grid-template-columns:1fr 1fr 1fr}.brand{grid-column:1/-1}
+ .molds{grid-template-columns:repeat(2,1fr)}
+ .mold{min-height:144px}
+}
 </style>
 </head>
 <body>
 <div id="app">
-<div class="top">
-<div class="title">🐟 붕어빵 장사왕</div>
-<div class="stat">📅 <span id="day"></span>일</div>
-<div class="stat">💰 <span id="cash"></span>원</div>
-<div class="stat">🔥 <span id="openText"></span></div>
+  <div class="topbar">
+    <div>
+      <div class="brand">🐟 붕어빵 장사왕 <span class="badge" id="shopLabel">노점 Lv.1</span></div>
+      <div class="weather" id="weatherText">오늘의 날씨: 추움</div>
+    </div>
+    <div class="stat">📅 <span id="day">1</span>일차</div>
+    <div class="stat">💰 <span id="cash">5,000</span>원</div>
+    <div class="stat">🥣 반죽 <span id="doughServings">0</span></div>
+    <div class="stat">🔥 <span id="openState">영업 전</span></div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2>🍳 주방</h2>
+        <div class="help">① 반죽 만들기 → ② 팝업에서 섞기 → ③ 짧아진 숙성 → ④ 빈 틀에 반죽 붓기 → ⑤ 같은 틀을 눌러 고명 넣기 → ⑥ 알맞게 익으면 뒤집기 → ⑦ 다시 익으면 꺼내기</div>
+        <div class="kitchen">
+          <div class="card">
+            <h3>🥣 반죽 작업대</h3>
+            <div id="doughStatus"><b>반죽통이 비어 있습니다.</b></div>
+            <div class="progress"><div id="doughProgress"></div></div>
+            <button id="doughBtn" class="bigButton">반죽 만들기 · 500원</button>
+            <div class="note" id="doughHint">기본 12개 분량이며 업그레이드로 늘릴 수 있습니다.</div>
+            <h3>🫘 넣을 고명 선택</h3>
+            <div class="ingredients" id="ingredientButtons"></div>
+          </div>
+          <div class="card">
+            <h3>🔥 붕어빵 틀 <span id="moldCountLabel">(4구)</span> <span class="soundTag">뒤집기 금속음 강화</span></h3>
+            <div class="moldWrap"><div id="molds" class="molds"></div></div>
+            <div class="note" style="margin-top:8px">실사 느낌의 붕어빵 틀과 실제 붕어빵 색감으로 개선했습니다. 노란 테두리가 깜빡일 때 누르면 가장 잘 익은 상태입니다.</div>
+          </div>
+        </div>
+
+        <div class="kitchen" style="margin-top:10px">
+          <div class="card">
+            <h3>✂️ 모양 잡기</h3>
+            <div id="shapeQueue" class="queue"></div>
+            <button id="shapeBtn" class="bigButton">한 번에 모두 모양 잡기</button>
+            <div class="note">한 번 클릭하면 대기 중인 붕어빵을 가능한 만큼 전부 정리해 진열장에 올립니다.</div>
+          </div>
+          <div class="card">
+            <h3>🪟 투명 보온 진열장 <span id="caseCount"></span></h3>
+            <div class="case"><div id="caseShelf" class="caseShelf"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:10px">
+        <h2>👥 손님</h2>
+        <div id="customers"></div>
+        <div class="footerActions">
+          <button id="openBtn" class="bigButton green">오늘 영업 시작</button>
+          <button id="endBtn" class="bigButton danger" disabled>오늘 장사 마감</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="tabs">
+          <button class="tab active" data-tab="upgrade">업그레이드</button>
+          <button class="tab" data-tab="log">장사 기록</button>
+        </div>
+        <div id="upgradeTab">
+          <h3>🔧 설비</h3>
+          <div class="upgrade">
+            <div><b>붕어빵 틀 확장</b><span id="moldUpgradeText">4구 → 6구</span></div>
+            <button id="moldUpgradeBtn" class="buy"></button>
+          </div>
+          <div class="upgrade">
+            <div><b>진열장 확장</b><span id="caseUpgradeText">8개 → 12개 보관</span></div>
+            <button id="caseUpgradeBtn" class="buy"></button>
+          </div>
+          <div class="upgrade">
+            <div><b>반죽 숙성통 개선</b><span id="fermentUpgradeText">숙성 시간 9초</span></div>
+            <button id="fermentUpgradeBtn" class="buy"></button>
+          </div>
+          <div class="upgrade">
+            <div><b>반죽양 늘리기</b><span id="doughCapacityUpgradeText">12개 → 18개 분량</span></div>
+            <button id="doughCapacityUpgradeBtn" class="buy"></button>
+          </div>
+          <h3>🧀 고명 해금</h3>
+          <div id="ingredientUpgrades"></div>
+        </div>
+        <div id="logTab" style="display:none">
+          <div id="log" class="log"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:10px">
+        <h2>📊 오늘 장사</h2>
+        <div class="summary">
+          <div>판매량</div><div><span id="soldToday">0</span>개</div>
+          <div>매출</div><div><span id="revenueToday">0</span>원</div>
+          <div>Perfect</div><div><span id="perfectToday">0</span>개</div>
+          <div>탄 붕어빵</div><div><span id="burntToday">0</span>개</div>
+          <div>놓친 손님</div><div><span id="missedToday">0</span>명</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="card">
-<h2>🥣 반죽</h2>
-<div class="help">반죽 만들기 → 5번 섞기 → 숙성 완료 → 틀에 붓기. 한 번 만들면 12개 분량입니다.</div>
-<div class="progress"><div id="doughBar"></div></div>
-<div id="doughText" class="small"></div>
-<button id="doughBtn" class="btn wide"></button>
-<h3>고명 선택</h3><div id="fillings" class="fillings"></div>
+<div id="modal" class="modal">
+  <div class="modalCard">
+    <h2>🌙 영업 종료</h2>
+    <div id="daySummary" class="summary"></div>
+    <p class="note">내일은 손님이 더 많아질 수 있습니다. 반죽과 설비를 준비하세요.</p>
+    <button id="nextDayBtn" class="bigButton">다음 날 준비하기</button>
+  </div>
 </div>
 
-<div class="card">
-<h2>🔥 붕어빵 틀 <span id="moldCount"></span></h2>
-<div class="help">빈 틀 → 반죽 → 고명 → 굽기. 테두리가 반짝일 때 눌러 뒤집고, 다시 반짝일 때 꺼내세요.</div>
-<div id="molds" class="molds"></div>
+<div id="mixModal" class="modal mixModal">
+  <div class="modalCard">
+    <h2>🥣 반죽 만들기 팝업</h2>
+    <div class="mixScene">
+      <div class="bowl">
+        <div class="batterSurface"></div>
+        <div id="whisk" class="whisk animate">
+          <div class="handle"></div>
+          <div class="wire"></div>
+        </div>
+      </div>
+      <div class="note">거품기로 반죽을 섞어 주세요. 5번 섞으면 숙성 단계로 넘어갑니다.</div>
+      <div id="mixDots" class="mixDots"><span></span><span></span><span></span><span></span><span></span></div>
+      <button id="mixBtn" class="bigButton">반죽 섞기</button>
+      <button id="closeMixBtn" class="bigButton secondary">잠시 닫기</button>
+    </div>
+  </div>
 </div>
-
-<div class="row">
-<div class="card"><h2>✂️ 모양 잡기</h2><div id="queue" class="queue"></div><button id="shapeBtn" class="btn wide">집게로 정리</button></div>
-<div class="card"><h2>🪟 진열장 <span id="caseCount"></span></h2><div id="case" class="case"></div></div>
-</div>
-
-<div class="card">
-<h2>👥 손님</h2><div id="customers"></div>
-<div class="row" style="margin-top:8px"><button id="openBtn" class="btn green">영업 시작</button><button id="endBtn" class="btn red">장사 마감</button></div>
-</div>
-
-<div class="card">
-<h2>🔧 업그레이드</h2>
-<div class="upgrade"><div><b>붕어빵 틀 확장</b><div id="moldUpText" class="small"></div></div><button id="moldUpBtn" class="btn"></button></div>
-<div class="upgrade"><div><b>진열장 확장</b><div id="caseUpText" class="small"></div></div><button id="caseUpBtn" class="btn"></button></div>
-<h3>고명 해금</h3><div id="unlockBox"></div>
-</div>
-
-<div class="card"><h2>📝 장사 기록</h2><div id="log" class="log"></div></div>
-</div>
-
-<div id="modal" class="modal"><div class="modalbox"><h2>오늘 장사 끝!</h2><div id="summary"></div><button id="nextBtn" class="btn wide" style="margin-top:10px">다음 날</button></div></div>
 
 <script>
-(function(){
-var F={
- red:{name:"팥",icon:"🫘",price:700,cost:0},
- custard:{name:"슈크림",icon:"🍮",price:900,cost:6000},
- cheese:{name:"치즈",icon:"🧀",price:1100,cost:10000},
- pizza:{name:"피자",icon:"🍕",price:1400,cost:16000}
+const fmt = n => Math.max(0,Math.floor(n)).toLocaleString("ko-KR");
+const fillings = {
+  redbean:{name:"팥",icon:"🫘",price:700,unlock:0},
+  custard:{name:"슈크림",icon:"🍮",price:900,unlock:6000},
+  cheese:{name:"치즈",icon:"🧀",price:1100,unlock:10000},
+  pizza:{name:"피자",icon:"🍕",price:1400,unlock:16000}
 };
-var moldLevels=[4,6,8,10,12,16],moldCosts=[4000,7500,12000,18000,27000];
-var caseLevels=[8,12,18,26,36],caseCosts=[3000,6000,10000,16000];
-var saved=localStorage.getItem("bungeoppangKing");
-var S=saved?JSON.parse(saved):{
- day:1,cash:5000,open:false,doughStage:"idle",mix:0,fermentStart:0,dough:0,
- selected:"red",unlocked:["red"],moldLevel:0,caseLevel:0,molds:[],queue:[],display:[],
- customers:[],lastCustomer:0,sold:0,revenue:0,burnt:0,missed:0
-};
-function blankMolds(){S.molds=[];for(var i=0;i<moldLevels[S.moldLevel];i++)S.molds.push({stage:"empty",fill:null,t:0,q:"normal"});}
-if(!S.molds||S.molds.length!==moldLevels[S.moldLevel])blankMolds();
-function save(){localStorage.setItem("bungeoppangKing",JSON.stringify(S));}
-function fmt(n){return Math.round(n).toLocaleString("ko-KR");}
-function log(t){var e=document.getElementById("log"),d=document.createElement("div");d.textContent="• "+t;e.prepend(d);while(e.children.length>50)e.lastChild.remove();}
-function beep(type){try{var A=window.AudioContext||window.webkitAudioContext;var a=new A(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=type==="bad"?150:type==="coin"?820:520;g.gain.value=.05;o.start();o.stop(a.currentTime+.08);}catch(e){}}
-function doughProgress(){
- if(S.doughStage==="idle")return 0;
- if(S.doughStage==="mix")return S.mix*12;
- if(S.doughStage==="ferment"){return 60+Math.min(40,(Date.now()-S.fermentStart)/100);}
- return 100;
+const moldLevels=[4,6,8,10,12,16];
+const moldCosts=[8000,15000,25000,40000,65000];
+const caseLevels=[8,12,18,26,36];
+const caseCosts=[5000,9000,15000,24000];
+const fermentTimes=[9,7,5,4];
+const fermentCosts=[7000,14000,25000];
+const doughCapacityLevels=[12,18,24,32,40];
+const doughCapacityCosts=[6000,12000,21000,35000];
+
+const defaultState=()=>({
+  day:1,cash:5000,shopLevel:1,
+  moldLevel:0,caseLevel:0,fermentLevel:0,doughCapacityLevel:0,
+  unlocked:["redbean"],selected:"redbean",
+  doughStage:"idle",doughMix:0,doughServings:0,fermentStart:0,
+  molds:[],shapeQueue:[],display:[],
+  open:false,customers:[],lastCustomer:0,
+  soldToday:0,revenueToday:0,perfectToday:0,burntToday:0,missedToday:0,
+  weather:"추움",weatherBoost:1,
+  totalSold:0,totalRevenue:0
+});
+let S;
+try{S=JSON.parse(localStorage.getItem("bungeoppangSave"))||defaultState()}catch(e){S=defaultState()}
+S.open=false; S.customers=[];
+if(typeof S.doughCapacityLevel!=="number") S.doughCapacityLevel=0;
+if(!Array.isArray(S.molds) || !S.molds.length) resetMolds();
+
+function resetMolds(){
+  S.molds=Array.from({length:moldLevels[S?.moldLevel||0]},()=>({stage:"empty",filling:null,t:0,quality:"normal"}));
 }
+function currentDoughCapacity(){return doughCapacityLevels[S.doughCapacityLevel]}
+function save(){localStorage.setItem("bungeoppangSave",JSON.stringify(S))}
+
+function synthFlipSound(){
+  try{
+    const a=new (window.AudioContext||window.webkitAudioContext)();
+    const t=a.currentTime;
+    const g=a.createGain(); g.gain.setValueAtTime(.16,t); g.gain.exponentialRampToValueAtTime(.001,t+.35); g.connect(a.destination);
+    const o1=a.createOscillator(); o1.type="triangle"; o1.frequency.setValueAtTime(880,t); o1.frequency.exponentialRampToValueAtTime(420,t+.08); o1.connect(g);
+    const o2=a.createOscillator(); o2.type="square"; o2.frequency.setValueAtTime(420,t+.02); o2.frequency.exponentialRampToValueAtTime(220,t+.12); o2.connect(g);
+    const noise=a.createBufferSource();
+    const buffer=a.createBuffer(1, a.sampleRate*.2, a.sampleRate);
+    const data=buffer.getChannelData(0);
+    for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.exp(-i/data.length*18);
+    noise.buffer=buffer;
+    const ng=a.createGain(); ng.gain.setValueAtTime(.12,t); ng.gain.exponentialRampToValueAtTime(.001,t+.18); noise.connect(ng); ng.connect(a.destination);
+    o1.start(t); o1.stop(t+.12); o2.start(t+.02); o2.stop(t+.14); noise.start(t); noise.stop(t+.18);
+    setTimeout(()=>a.close(),500);
+  }catch(e){}
+}
+function beep(type="coin"){
+  if(type==="flip") return synthFlipSound();
+  try{
+    const a=new (window.AudioContext||window.webkitAudioContext)();
+    const o=a.createOscillator(),g=a.createGain(); o.connect(g); g.connect(a.destination);
+    if(type==="coin"){o.frequency.setValueAtTime(900,a.currentTime);o.frequency.exponentialRampToValueAtTime(1400,a.currentTime+.12)}
+    else if(type==="ding"){o.frequency.setValueAtTime(600,a.currentTime);o.frequency.exponentialRampToValueAtTime(900,a.currentTime+.18)}
+    else if(type==="stir"){o.frequency.setValueAtTime(420,a.currentTime);o.frequency.exponentialRampToValueAtTime(620,a.currentTime+.08)}
+    else{o.frequency.setValueAtTime(160,a.currentTime);o.frequency.exponentialRampToValueAtTime(90,a.currentTime+.15)}
+    g.gain.setValueAtTime(.05,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.2);
+    o.start();o.stop(a.currentTime+.22); setTimeout(()=>a.close(),300);
+  }catch(e){}
+}
+function log(msg){
+  const el=document.getElementById("log");
+  const d=document.createElement("div"); d.textContent=`[${new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}] ${msg}`;
+  el.prepend(d);
+}
+function randomWeather(){
+  const arr=[["추움",1.0,"🥶"],["매우 추움",1.25,"❄️"],["눈",1.45,"🌨️"],["포근함",.8,"🌤️"]];
+  const w=arr[Math.floor(Math.random()*arr.length)];
+  S.weather=w[0];S.weatherBoost=w[1];S.weatherIcon=w[2];
+}
+if(!S.weatherIcon) randomWeather();
+
+function openMixModal(){document.getElementById("mixModal").classList.add("show"); updateMixDots();}
+function closeMixModal(){document.getElementById("mixModal").classList.remove("show");}
+function updateMixDots(){
+  [...document.querySelectorAll("#mixDots span")].forEach((el,i)=>el.classList.toggle("on",i<S.doughMix));
+}
+function startDough(){
+  if(S.cash<500) return;
+  S.cash-=500; S.doughStage="mixing"; S.doughMix=0; openMixModal(); updateMixDots(); log("새 반죽을 만들기 시작했습니다."); render();
+}
+function stirDough(){
+  if(S.doughStage!=="mixing") return;
+  S.doughMix++; beep("stir"); updateMixDots();
+  const whisk=document.getElementById("whisk"); whisk.classList.remove("animate"); void whisk.offsetWidth; whisk.classList.add("animate");
+  if(S.doughMix>=5){
+    S.doughStage="fermenting"; S.fermentStart=Date.now(); closeMixModal(); log("반죽 숙성을 시작했습니다.");
+  }
+  render();
+}
+
 function render(){
- document.getElementById("day").textContent=S.day;
- document.getElementById("cash").textContent=fmt(S.cash);
- document.getElementById("openText").textContent=S.open?"영업 중":"영업 전";
- document.getElementById("doughBar").style.width=doughProgress()+"%";
- var db=document.getElementById("doughBtn"),dt=document.getElementById("doughText");
- if(S.doughStage==="idle"){db.textContent="반죽 만들기 · 500원";db.disabled=S.cash<500;dt.textContent="반죽통이 비어 있습니다.";}
- else if(S.doughStage==="mix"){db.textContent="반죽 섞기 ("+S.mix+"/5)";db.disabled=false;dt.textContent="잘 섞어 주세요.";}
- else if(S.doughStage==="ferment"){db.textContent="숙성 중...";db.disabled=true;dt.textContent="잠시 기다리면 12개 분량이 완성됩니다.";}
- else{db.textContent="반죽 준비 완료";db.disabled=true;dt.textContent="남은 반죽 "+S.dough+"개 분량";}
- renderFillings();renderMolds();renderQueue();renderCase();renderCustomers();renderUpgrades();
- document.getElementById("openBtn").disabled=S.open;
- document.getElementById("endBtn").disabled=!S.open;
- save();
+  document.getElementById("day").textContent=S.day;
+  document.getElementById("cash").textContent=fmt(S.cash);
+  document.getElementById("doughServings").textContent=S.doughServings;
+  document.getElementById("openState").textContent=S.open?"영업 중":"영업 전";
+  document.getElementById("weatherText").textContent=`오늘의 날씨: ${S.weatherIcon||"🥶"} ${S.weather} · 손님 ${Math.round(S.weatherBoost*100)}%`;
+  document.getElementById("shopLabel").textContent=`노점 Lv.${S.shopLevel}`;
+  document.getElementById("moldCountLabel").textContent=`(${moldLevels[S.moldLevel]}구)`;
+  document.getElementById("caseCount").textContent=`(${S.display.length}/${caseLevels[S.caseLevel]})`;
+  ["soldToday","revenueToday","perfectToday","burntToday","missedToday"].forEach(id=>{
+    document.getElementById(id).textContent=id.includes("revenue")?fmt(S[id]):S[id];
+  });
+  renderDough(); renderIngredients(); renderMolds(); renderQueue(); renderCase(); renderCustomers(); renderUpgrades();
+  document.getElementById("openBtn").disabled=S.open;
+  document.getElementById("endBtn").disabled=!S.open;
+  save();
 }
-document.getElementById("doughBtn").onclick=function(){
- if(S.doughStage==="idle"){if(S.cash<500)return;S.cash-=500;S.doughStage="mix";S.mix=0;log("반죽 재료를 준비했습니다.");}
- else if(S.doughStage==="mix"){S.mix++;beep("tap");if(S.mix>=5){S.doughStage="ferment";S.fermentStart=Date.now();log("반죽 숙성을 시작했습니다.");}}
- render();
+function renderDough(){
+  const st=document.getElementById("doughStatus"), btn=document.getElementById("doughBtn"), bar=document.getElementById("doughProgress"), hint=document.getElementById("doughHint");
+  if(S.doughStage==="idle"){
+    st.innerHTML="<b>반죽통이 비어 있습니다.</b>";btn.textContent="반죽 만들기 · 500원";btn.disabled=S.cash<500;bar.style.width="0%";hint.textContent=`현재 반죽량은 ${currentDoughCapacity()}개 분량입니다.`;
+  } else if(S.doughStage==="mixing"){
+    st.innerHTML=`<b>반죽 중 · ${S.doughMix}/5회</b>`;btn.textContent="반죽 팝업 다시 열기";btn.disabled=false;bar.style.width=(S.doughMix/5*100)+"%";hint.textContent="팝업에서 반죽하는 모습을 보면서 섞을 수 있습니다.";
+  } else if(S.doughStage==="fermenting"){
+    const sec=Math.max(0,fermentTimes[S.fermentLevel]-(Date.now()-S.fermentStart)/1000);
+    st.innerHTML=`<b>숙성 중 · ${sec.toFixed(1)}초</b>`;btn.textContent="숙성 중…";btn.disabled=true;bar.style.width=((1-sec/fermentTimes[S.fermentLevel])*100)+"%";hint.textContent="숙성 시간이 약간 줄었습니다.";
+  } else {
+    st.innerHTML=`<b>숙성 완료 · ${S.doughServings}개 분량</b>`;btn.textContent="새 반죽 만들기 · 500원";btn.disabled=S.doughServings>0||S.cash<500;bar.style.width="100%";hint.textContent="빈 붕어빵 틀을 눌러 반죽을 부으세요.";
+  }
+}
+document.getElementById("doughBtn").onclick=()=>{
+  if(S.doughStage==="idle" || (S.doughStage==="ready"&&S.doughServings===0)) startDough();
+  else if(S.doughStage==="mixing") openMixModal();
+  render();
 };
-function renderFillings(){
- var box=document.getElementById("fillings");box.innerHTML="";
- Object.keys(F).forEach(function(k){var b=document.createElement("button");b.className="btn fill"+(S.selected===k?" on":"");b.textContent=F[k].icon+" "+F[k].name+(S.unlocked.indexOf(k)>=0?"":" 🔒");b.disabled=S.unlocked.indexOf(k)<0;b.onclick=function(){S.selected=k;render();};box.appendChild(b);});
+document.getElementById("mixBtn").onclick=stirDough;
+document.getElementById("closeMixBtn").onclick=closeMixModal;
+
+function renderIngredients(){
+  const box=document.getElementById("ingredientButtons");box.innerHTML="";
+  Object.entries(fillings).forEach(([k,v])=>{
+    const b=document.createElement("button"); b.className="ingredientBtn"+(S.selected===k?" active":"");
+    b.textContent=`${v.icon} ${v.name}${S.unlocked.includes(k)?"":" 🔒"}`;
+    b.disabled=!S.unlocked.includes(k);
+    b.onclick=()=>{S.selected=k;render()};box.appendChild(b);
+  });
 }
-function stageText(m){
- if(m.stage==="empty")return "빈 틀";
- if(m.stage==="batter")return "고명 넣기";
- if(m.stage==="cook1")return "앞면 굽는 중";
- if(m.stage==="flip")return "지금 뒤집기!";
- if(m.stage==="cook2")return "뒷면 굽는 중";
- if(m.stage==="out")return "지금 꺼내기!";
- return "탔어요 · 버리기";
+function moldMarkup(m){
+  return `<div class="fishArt"><div class="fishBody"><div class="eye"></div><div class="gill"></div><div class="fin"></div><div class="tailFin"></div><div class="scale"></div><div class="shine"></div></div></div><div class="moldLabel">${m.label}</div>`;
 }
 function renderMolds(){
- var box=document.getElementById("molds");box.innerHTML="";document.getElementById("moldCount").textContent="("+S.molds.length+"구)";
- S.molds.forEach(function(m,i){var b=document.createElement("button");b.className="mold "+(m.stage==="batter"?"batter":m.stage==="cook1"||m.stage==="cook2"?"cook":m.stage==="flip"||m.stage==="out"?"ready":m.stage==="burnt"?"burnt":"");b.innerHTML='<span class="fish">'+(m.stage==="burnt"?"💀":"🐟")+'</span><b>'+stageText(m)+'</b>';b.onclick=function(){clickMold(i);};box.appendChild(b);});
+  const box=document.getElementById("molds");box.innerHTML="";
+  S.molds.forEach((m,i)=>{
+    let label="빈 틀";
+    if(m.stage==="batter") label="고명 넣기";
+    if(m.stage==="cook1") label="앞면 굽는 중";
+    if(m.stage==="flipReady") label="지금 뒤집기!";
+    if(m.stage==="cook2") label="뒷면 굽는 중";
+    if(m.stage==="outReady") label="지금 꺼내기!";
+    if(m.stage==="burnt") label="탔어요 · 버리기";
+    const el=document.createElement("div"); el.className=`mold ${m.stage}`; if(m.stage==="empty") el.classList.add("empty");
+    el.innerHTML=moldMarkup({label});
+    el.onclick=()=>clickMold(i);
+    box.appendChild(el);
+  });
 }
 function clickMold(i){
- var m=S.molds[i],now=Date.now();
- if(m.stage==="empty"){if(S.dough<=0){log("사용할 반죽이 없습니다.");return;}S.dough--;m.stage="batter";if(S.dough===0)S.doughStage="idle";log((i+1)+"번 틀에 반죽을 부었습니다.");}
- else if(m.stage==="batter"){m.fill=S.selected;m.stage="cook1";m.t=now;m.q="normal";log(F[m.fill].name+" 고명을 넣었습니다.");}
- else if(m.stage==="flip"){m.q=now-m.t<1600?"perfect":"normal";m.stage="cook2";m.t=now;beep("coin");}
- else if(m.stage==="out"){S.queue.push({fill:m.fill,q:m.q});S.molds[i]={stage:"empty",fill:null,t:0,q:"normal"};beep("coin");}
- else if(m.stage==="burnt"){S.burnt++;S.molds[i]={stage:"empty",fill:null,t:0,q:"normal"};log("탄 붕어빵을 버렸습니다.");}
- render();
+  const m=S.molds[i], now=Date.now();
+  if(m.stage==="empty"){
+    if(S.doughServings<=0){log("사용 가능한 반죽이 없습니다.");return}
+    S.doughServings--;m.stage="batter";m.t=now;beep("tap");log(`${i+1}번 틀에 반죽을 부었습니다.`);
+    if(S.doughServings===0)S.doughStage="idle";
+  }else if(m.stage==="batter"){
+    m.filling=S.selected;m.stage="cook1";m.t=now;m.quality="normal";beep("tap");log(`${i+1}번에 ${fillings[m.filling].name} 고명을 넣고 굽기 시작했습니다.`);
+  }else if(m.stage==="flipReady"){
+    const late=now-m.t;
+    m.quality=late<1700?"perfect":"normal";m.stage="cook2";m.t=now;beep("flip");log(`${i+1}번 붕어빵틀을 뒤집었습니다${m.quality==="perfect"?" · Perfect!":""}`);
+  }else if(m.stage==="outReady"){
+    const late=now-m.t;
+    if(late<1700 && m.quality==="perfect"){S.perfectToday++;m.quality="perfect"}
+    S.shapeQueue.push({filling:m.filling,quality:m.quality});
+    log(`${i+1}번 붕어빵을 틀에서 꺼냈습니다.`);beep("ding");
+    S.molds[i]={stage:"empty",filling:null,t:0,quality:"normal"};
+  }else if(m.stage==="burnt"){
+    S.burntToday++;S.molds[i]={stage:"empty",filling:null,t:0,quality:"normal"};log("탄 붕어빵을 버렸습니다.");beep("bad");
+  }
+  render();
 }
-function renderQueue(){var q=document.getElementById("queue");q.innerHTML="";S.queue.forEach(function(x){var d=document.createElement("div");d.className="piece";d.textContent="🐟"+F[x.fill].icon+(x.q==="perfect"?"★":"");q.appendChild(d);});document.getElementById("shapeBtn").disabled=!S.queue.length||S.display.length>=caseLevels[S.caseLevel];}
-document.getElementById("shapeBtn").onclick=function(){if(!S.queue.length||S.display.length>=caseLevels[S.caseLevel])return;S.display.push(S.queue.shift());beep("tap");render();};
-function renderCase(){var c=document.getElementById("case");c.innerHTML="";S.display.forEach(function(x){var d=document.createElement("div");d.className="piece";d.textContent="🐟"+F[x.fill].icon+(x.q==="perfect"?"★":"");c.appendChild(d);});document.getElementById("caseCount").textContent="("+S.display.length+"/"+caseLevels[S.caseLevel]+")";}
-var avatars=["🧑🏻","👩🏻","👨🏻","👵🏻","👴🏻","🧒🏻"];
-function spawnCustomer(){if(!S.open||S.customers.length>=3)return;var f=S.unlocked[Math.floor(Math.random()*S.unlocked.length)],qty=1+Math.floor(Math.random()*Math.min(3,1+Math.floor(S.day/2)));S.customers.push({id:Date.now()+Math.random(),avatar:avatars[Math.floor(Math.random()*avatars.length)],fill:f,qty:qty,born:Date.now(),wait:20000});log("손님 주문: "+F[f].name+" "+qty+"개");}
+
+function renderQueue(){
+  const q=document.getElementById("shapeQueue");q.innerHTML="";
+  S.shapeQueue.forEach((x)=>{
+    const d=document.createElement("div");d.className="rawFish";d.textContent=`🐟 ${fillings[x.filling].name}${x.quality==="perfect"?" ⭐":""}`;q.appendChild(d);
+  });
+  document.getElementById("shapeBtn").disabled=!S.shapeQueue.length||S.display.length>=caseLevels[S.caseLevel];
+}
+document.getElementById("shapeBtn").onclick=()=>{
+  if(!S.shapeQueue.length||S.display.length>=caseLevels[S.caseLevel])return;
+  let moved=0;
+  while(S.shapeQueue.length && S.display.length<caseLevels[S.caseLevel]){ S.display.push(S.shapeQueue.shift()); moved++; }
+  beep("tap");log(`${moved}개의 붕어빵을 한 번에 모양 잡아 진열했습니다.`);render();
+};
+function renderCase(){
+  const c=document.getElementById("caseShelf");c.innerHTML="";
+  S.display.forEach((x)=>{
+    const d=document.createElement("div");d.className="item";d.title=fillings[x.filling].name;
+    d.innerHTML=`<span>${fillings[x.filling].icon}${x.quality==="perfect"?"★":""}</span>`;c.appendChild(d);
+  });
+}
+const avatars=["🧑🏻","👩🏻","👨🏻","👩🏻‍🦱","🧒🏻","👴🏻","👵🏻","🧑🏻‍🎓"];
+function spawnCustomer(){
+  if(!S.open||S.customers.length>=4)return;
+  const unlocked=S.unlocked;
+  const filling=unlocked[Math.floor(Math.random()*unlocked.length)];
+  const qty=1+Math.floor(Math.random()*Math.min(3,1+Math.floor(S.day/2)));
+  S.customers.push({id:Date.now()+Math.random(),avatar:avatars[Math.floor(Math.random()*avatars.length)],filling,qty,born:Date.now(),patience:20000});
+  log(`손님: ${fillings[filling].name} 붕어빵 ${qty}개 주문`);
+}
 function renderCustomers(){
- var box=document.getElementById("customers");box.innerHTML="";
- if(!S.customers.length){box.innerHTML='<div class="small">'+(S.open?"손님을 기다리는 중입니다…":"영업을 시작해 주세요.")+'</div>';return;}
- S.customers.forEach(function(c){var remain=Math.max(0,1-(Date.now()-c.born)/c.wait),d=document.createElement("div");d.className="customer";d.innerHTML='<div class="avatar">'+c.avatar+'</div><div><div class="order">'+F[c.fill].icon+" "+F[c.fill].name+" "+c.qty+'개 주세요!</div><div class="bar"><div style="width:'+(remain*100)+'%"></div></div></div><button class="btn green">판매</button>';d.querySelector("button").onclick=function(){sell(c.id);};box.appendChild(d);});
+  const box=document.getElementById("customers");box.innerHTML="";
+  if(!S.customers.length){
+    box.innerHTML=`<div class="note">${S.open?"손님을 기다리는 중입니다…":"영업을 시작하면 손님이 찾아옵니다."}</div>`;return;
+  }
+  S.customers.forEach(c=>{
+    const remain=Math.max(0,1-(Date.now()-c.born)/c.patience);
+    const d=document.createElement("div");d.className="customer";
+    d.innerHTML=`<div class="avatar">${c.avatar}</div><div><div class="order">${fillings[c.filling].icon} ${fillings[c.filling].name} 붕어빵 ${c.qty}개 주세요!</div><div class="patience"><div style="width:${remain*100}%"></div></div></div><button class="sell">판매</button>`;
+    d.querySelector(".sell").onclick=()=>sellTo(c.id);
+    box.appendChild(d);
+  });
 }
-function sell(id){
- var c=S.customers.find(function(x){return x.id===id;});if(!c)return;
- var idx=[];S.display.forEach(function(x,i){if(x.fill===c.fill&&idx.length<c.qty)idx.push(i);});
- if(idx.length<c.qty){log(F[c.fill].name+" 재고가 부족합니다.");beep("bad");return;}
- var money=0;idx.reverse().forEach(function(i){var x=S.display[i];money+=F[x.fill].price*(x.q==="perfect"?1.25:1);S.display.splice(i,1);});
- money=Math.round(money/100)*100;S.cash+=money;S.sold+=c.qty;S.revenue+=money;S.customers=S.customers.filter(function(x){return x.id!==id;});log("판매 +"+fmt(money)+"원");beep("coin");render();
+function sellTo(id){
+  const c=S.customers.find(x=>x.id===id);if(!c)return;
+  const idx=[];S.display.forEach((x,i)=>{if(x.filling===c.filling && idx.length<c.qty)idx.push(i)});
+  if(idx.length<c.qty){log(`${fillings[c.filling].name} 붕어빵 재고가 부족합니다.`);beep("bad");return}
+  let price=0;idx.reverse().forEach(i=>{const x=S.display[i];price+=fillings[x.filling].price*(x.quality==="perfect"?1.25:1);S.display.splice(i,1)});
+  price=Math.round(price/100)*100;
+  S.cash+=price;S.soldToday+=c.qty;S.totalSold+=c.qty;S.revenueToday+=price;S.totalRevenue+=price;
+  S.customers=S.customers.filter(x=>x.id!==id);beep("coin");log(`${fillings[c.filling].name} ${c.qty}개 판매 · +${fmt(price)}원`);render();
 }
-document.getElementById("openBtn").onclick=function(){S.open=true;S.lastCustomer=0;log(S.day+"일차 영업 시작!");render();};
-document.getElementById("endBtn").onclick=function(){if(!S.open)return;S.open=false;S.customers=[];document.getElementById("summary").innerHTML="<p>판매량: <b>"+S.sold+"개</b></p><p>매출: <b>"+fmt(S.revenue)+"원</b></p><p>탄 붕어빵: <b>"+S.burnt+"개</b></p><p>놓친 손님: <b>"+S.missed+"명</b></p><p>현재 자금: <b>"+fmt(S.cash)+"원</b></p>";document.getElementById("modal").classList.add("show");render();};
-document.getElementById("nextBtn").onclick=function(){S.day++;S.sold=0;S.revenue=0;S.burnt=0;S.missed=0;document.getElementById("modal").classList.remove("show");log(S.day+"일차 준비 시작.");render();};
+document.getElementById("openBtn").onclick=()=>{S.open=true;S.lastCustomer=0;log(`${S.day}일차 영업을 시작했습니다.`);render();};
+document.getElementById("endBtn").onclick=()=>{if(!S.open)return;S.open=false;S.customers=[];showSummary();};
+function showSummary(){
+  document.getElementById("daySummary").innerHTML=`
+  <div>판매량</div><div>${S.soldToday}개</div>
+  <div>매출</div><div>${fmt(S.revenueToday)}원</div>
+  <div>Perfect</div><div>${S.perfectToday}개</div>
+  <div>탄 붕어빵</div><div>${S.burntToday}개</div>
+  <div>놓친 손님</div><div>${S.missedToday}명</div>
+  <div>현재 자금</div><div>${fmt(S.cash)}원</div>`;
+  document.getElementById("modal").classList.add("show");
+}
+document.getElementById("nextDayBtn").onclick=()=>{
+  S.day++;S.shopLevel=1+Math.floor((S.day-1)/4);S.soldToday=0;S.revenueToday=0;S.perfectToday=0;S.burntToday=0;S.missedToday=0;randomWeather();
+  document.getElementById("modal").classList.remove("show");log(`${S.day}일차 준비 시작 · 오늘 날씨는 ${S.weather}`);render();
+};
+
 function renderUpgrades(){
- var ml=S.moldLevel,mb=document.getElementById("moldUpBtn");document.getElementById("moldUpText").textContent=ml<moldLevels.length-1?moldLevels[ml]+"구 → "+moldLevels[ml+1]+"구":"최대";mb.textContent=ml<moldCosts.length?fmt(moldCosts[ml])+"원":"MAX";mb.disabled=ml>=moldCosts.length||S.cash<moldCosts[ml]||S.molds.some(function(m){return m.stage!=="empty";});
- var cl=S.caseLevel,cb=document.getElementById("caseUpBtn");document.getElementById("caseUpText").textContent=cl<caseLevels.length-1?caseLevels[cl]+"개 → "+caseLevels[cl+1]+"개":"최대";cb.textContent=cl<caseCosts.length?fmt(caseCosts[cl])+"원":"MAX";cb.disabled=cl>=caseCosts.length||S.cash<caseCosts[cl];
- var ub=document.getElementById("unlockBox");ub.innerHTML="";Object.keys(F).forEach(function(k){if(!F[k].cost)return;var d=document.createElement("div"),un=S.unlocked.indexOf(k)>=0;d.className="upgrade";d.innerHTML='<div><b>'+F[k].icon+" "+F[k].name+'</b><div class="small">판매가 '+fmt(F[k].price)+'원</div></div><button class="btn">'+(un?"해금됨":fmt(F[k].cost)+"원")+'</button>';var b=d.querySelector("button");b.disabled=un||S.cash<F[k].cost;b.onclick=function(){if(un||S.cash<F[k].cost)return;S.cash-=F[k].cost;S.unlocked.push(k);log(F[k].name+" 해금!");render();};ub.appendChild(d);});
+  const ml=S.moldLevel,mb=document.getElementById("moldUpgradeBtn");
+  document.getElementById("moldUpgradeText").textContent=ml<moldLevels.length-1?`${moldLevels[ml]}구 → ${moldLevels[ml+1]}구`:"최대 확장 완료";
+  mb.textContent=ml<moldCosts.length?`${fmt(moldCosts[ml])}원`:"MAX";
+  mb.disabled=ml>=moldCosts.length||S.cash<moldCosts[ml]||S.molds.some(m=>m.stage!=="empty");
+
+  const cl=S.caseLevel,cb=document.getElementById("caseUpgradeBtn");
+  document.getElementById("caseUpgradeText").textContent=cl<caseLevels.length-1?`${caseLevels[cl]}개 → ${caseLevels[cl+1]}개 보관`:"최대 확장 완료";
+  cb.textContent=cl<caseCosts.length?`${fmt(caseCosts[cl])}원`:"MAX";
+  cb.disabled=cl>=caseCosts.length||S.cash<caseCosts[cl];
+
+  const fl=S.fermentLevel,fb=document.getElementById("fermentUpgradeBtn");
+  document.getElementById("fermentUpgradeText").textContent=fl<fermentTimes.length-1?`숙성 ${fermentTimes[fl]}초 → ${fermentTimes[fl+1]}초`:"최대 업그레이드";
+  fb.textContent=fl<fermentCosts.length?`${fmt(fermentCosts[fl])}원`:"MAX";
+  fb.disabled=fl>=fermentCosts.length||S.cash<fermentCosts[fl];
+
+  const dl=S.doughCapacityLevel,db=document.getElementById("doughCapacityUpgradeBtn");
+  document.getElementById("doughCapacityUpgradeText").textContent=dl<doughCapacityLevels.length-1?`${doughCapacityLevels[dl]}개 → ${doughCapacityLevels[dl+1]}개 분량`:"최대 업그레이드";
+  db.textContent=dl<doughCapacityCosts.length?`${fmt(doughCapacityCosts[dl])}원`:"MAX";
+  db.disabled=dl>=doughCapacityCosts.length||S.cash<doughCapacityCosts[dl];
+
+  const box=document.getElementById("ingredientUpgrades");box.innerHTML="";
+  Object.entries(fillings).filter(([,v])=>v.unlock>0).forEach(([k,v])=>{
+    const d=document.createElement("div");d.className="upgrade";
+    const unlocked=S.unlocked.includes(k);
+    d.innerHTML=`<div><b>${v.icon} ${v.name}</b><span>판매가 ${fmt(v.price)}원</span></div><button class="buy">${unlocked?"해금됨":fmt(v.unlock)+"원"}</button>`;
+    const b=d.querySelector("button");b.disabled=unlocked||S.cash<v.unlock;b.onclick=()=>{if(S.cash>=v.unlock&&!unlocked){S.cash-=v.unlock;S.unlocked.push(k);log(`${v.name} 고명을 해금했습니다!`);beep("coin");render()}};
+    box.appendChild(d);
+  });
 }
-document.getElementById("moldUpBtn").onclick=function(){var i=S.moldLevel;if(i>=moldCosts.length||S.cash<moldCosts[i])return;S.cash-=moldCosts[i];S.moldLevel++;blankMolds();log("틀을 "+moldLevels[S.moldLevel]+"구로 확장했습니다.");render();};
-document.getElementById("caseUpBtn").onclick=function(){var i=S.caseLevel;if(i>=caseCosts.length||S.cash<caseCosts[i])return;S.cash-=caseCosts[i];S.caseLevel++;log("진열장을 확장했습니다.");render();};
-setInterval(function(){
- var now=Date.now();
- if(S.doughStage==="ferment"&&now-S.fermentStart>=10000){S.doughStage="ready";S.dough=12;log("반죽 숙성 완료! 12개 분량 준비됐습니다.");beep("coin");}
- S.molds.forEach(function(m){if(m.stage==="cook1"&&now-m.t>=3500){m.stage="flip";m.t=now;beep("coin");}else if(m.stage==="flip"&&now-m.t>=5500){m.stage="burnt";beep("bad");}else if(m.stage==="cook2"&&now-m.t>=2600){m.stage="out";m.t=now;beep("coin");}else if(m.stage==="out"&&now-m.t>=5500){m.stage="burnt";beep("bad");}});
- if(S.open){if(!S.lastCustomer||now-S.lastCustomer>Math.max(3500,6500-S.day*100)){spawnCustomer();S.lastCustomer=now;}var before=S.customers.length;S.customers=S.customers.filter(function(c){return now-c.born<c.wait;});if(S.customers.length<before){S.missed+=before-S.customers.length;log("기다리던 손님이 돌아갔습니다.");}}
- render();
-},350);
-log("게임 준비 완료. 반죽부터 만들어 보세요.");
+document.getElementById("moldUpgradeBtn").onclick=()=>{const i=S.moldLevel;if(i>=moldCosts.length||S.cash<moldCosts[i])return;S.cash-=moldCosts[i];S.moldLevel++;resetMolds();log(`붕어빵 틀을 ${moldLevels[S.moldLevel]}구로 확장했습니다.`);beep("coin");render();};
+document.getElementById("caseUpgradeBtn").onclick=()=>{const i=S.caseLevel;if(i>=caseCosts.length||S.cash<caseCosts[i])return;S.cash-=caseCosts[i];S.caseLevel++;log(`진열장을 ${caseLevels[S.caseLevel]}개 보관형으로 확장했습니다.`);beep("coin");render();};
+document.getElementById("fermentUpgradeBtn").onclick=()=>{const i=S.fermentLevel;if(i>=fermentCosts.length||S.cash<fermentCosts[i])return;S.cash-=fermentCosts[i];S.fermentLevel++;log(`숙성통을 개선했습니다. 숙성 시간 ${fermentTimes[S.fermentLevel]}초.`);beep("coin");render();};
+document.getElementById("doughCapacityUpgradeBtn").onclick=()=>{const i=S.doughCapacityLevel;if(i>=doughCapacityCosts.length||S.cash<doughCapacityCosts[i])return;S.cash-=doughCapacityCosts[i];S.doughCapacityLevel++;log(`반죽량을 늘렸습니다. 이제 ${currentDoughCapacity()}개 분량입니다.`);beep("coin");render();};
+
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+  const up=b.dataset.tab==="upgrade";document.getElementById("upgradeTab").style.display=up?"block":"none";document.getElementById("logTab").style.display=up?"none":"block";
+});
+setInterval(()=>{
+  const now=Date.now();
+  if(S.doughStage==="fermenting" && now-S.fermentStart>=fermentTimes[S.fermentLevel]*1000){
+    S.doughStage="ready";S.doughServings=currentDoughCapacity();log(`반죽 숙성이 끝났습니다. ${currentDoughCapacity()}개 분량 준비 완료!`);beep("ding");
+  }
+  S.molds.forEach(m=>{
+    if(m.stage==="cook1" && now-m.t>=4000){m.stage="flipReady";m.t=now;beep("ding")}
+    else if(m.stage==="flipReady" && now-m.t>=6500){m.stage="burnt";beep("bad")}
+    else if(m.stage==="cook2" && now-m.t>=3200){m.stage="outReady";m.t=now;beep("ding")}
+    else if(m.stage==="outReady" && now-m.t>=6500){m.stage="burnt";beep("bad")}
+  });
+  if(S.open){
+    const interval=Math.max(3200,7500/S.weatherBoost-(S.day-1)*150);
+    if(!S.lastCustomer||now-S.lastCustomer>interval){spawnCustomer();S.lastCustomer=now}
+    const before=S.customers.length;
+    S.customers=S.customers.filter(c=>now-c.born<c.patience);
+    if(S.customers.length<before){S.missedToday+=before-S.customers.length;log("기다리던 손님이 돌아갔습니다.");}
+  }
+  render();
+},300);
 render();
-})();
+log("게임 준비 완료. 반죽부터 만들어 보세요.");
 </script>
 </body>
 </html>
