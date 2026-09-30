@@ -42,10 +42,12 @@ jobs:
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
 
-      - name: Verify APK signature and manifest
+      - name: Verify APK and embedded game
         run: |
-          $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk
-          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.bungeoppang.king.sept30d'"
+          $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose app/build/outputs/apk/debug/app-debug.apk
+          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.bungeoppang.king.sept30e'"
+          unzip -p app/build/outputs/apk/debug/app-debug.apk assets/index.html | grep -q "붕어빵 장사왕"
+          unzip -p app/build/outputs/apk/debug/app-debug.apk assets/index.html | grep -q 'id="app"'
 
       - name: Enable KVM
         run: |
@@ -53,7 +55,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Install launch and keep alive on Android emulator
+      - name: Install launch render and capture on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -64,22 +66,26 @@ jobs:
           emulator-options: -no-snapshot -no-window -no-boot-anim -gpu swiftshader_indirect -camera-back none -camera-front none
           script: |
             adb install app/build/outputs/apk/debug/app-debug.apk
-            adb shell am start -W -n com.bungeoppang.king.sept30d/com.bungeoppang.king.MainActivity
-            sleep 5
-            adb shell pidof com.bungeoppang.king.sept30d
-            adb shell dumpsys activity activities | grep -q "com.bungeoppang.king.sept30d/com.bungeoppang.king.MainActivity"
+            adb shell am start -W -n com.bungeoppang.king.sept30e/com.bungeoppang.king.MainActivity
+            sleep 7
+            adb shell pidof com.bungeoppang.king.sept30e
+            adb shell dumpsys activity activities | grep -q "com.bungeoppang.king.sept30e/com.bungeoppang.king.MainActivity"
+            adb exec-out screencap -p > app-screen.png
+            test -s app-screen.png
 
       - name: Prepare release APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v1.4-safe.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk BungeoppangKing-v1.5-fixed-screen.apk
 
-      - name: Upload workflow artifact
+      - name: Upload APK and screen proof
         uses: actions/upload-artifact@v4
         with:
-          name: BungeoppangKing-v1.4-safe-apk
-          path: BungeoppangKing-v1.4-safe.apk
+          name: BungeoppangKing-v1.5-proof
+          path: |
+            BungeoppangKing-v1.5-fixed-screen.apk
+            app-screen.png
           if-no-files-found: error
 
       - name: Publish GitHub Release
         run: |
-          gh release delete v1.4.0 --cleanup-tag -y || true
-          gh release create v1.4.0 BungeoppangKing-v1.4-safe.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v1.4.0 실행안정화" --notes "네이티브 시작화면을 먼저 표시하고 WebView 게임을 안전하게 로딩하도록 수정. 전체화면 강제 코드를 제거하고 Android 15 에뮬레이터에서 설치, 실행, 5초 생존 및 포그라운드 Activity 확인 후 배포."
+          gh release delete v1.5.0 --cleanup-tag -y || true
+          gh release create v1.5.0 BungeoppangKing-v1.5-fixed-screen.apk --target "${GITHUB_SHA}" --title "붕어빵 장사왕 v1.5.0 화면복구" --notes "잘못 업로드된 index.html을 실제 게임 HTML로 복구. 게임 JS가 렌더 완료를 알릴 때까지 네이티브 로딩화면을 유지. Android 15 에뮬레이터 설치/실행 후 실제 화면 캡처까지 생성한 APK."
