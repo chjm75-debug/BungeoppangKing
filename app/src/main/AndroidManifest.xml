@@ -4,7 +4,7 @@
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
-        android:label="붕어빵 장사왕"
+        android:label="오늘도 고기"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
