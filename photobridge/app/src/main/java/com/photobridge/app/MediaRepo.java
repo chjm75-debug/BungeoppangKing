@@ -58,21 +58,12 @@ public class MediaRepo {
         return a;
     }
 
-    public long maxIdForAlbum(String bucketId) {
-        String[] p = { MediaStore.Images.Media._ID };
-        String sel = MediaStore.Images.Media.BUCKET_ID + "=?";
-        Cursor c = ctx.getContentResolver().query(collection(), p, sel, new String[]{bucketId},
-                MediaStore.Images.Media._ID + " DESC");
-        if (c == null) return 0L;
-        try { return c.moveToFirst() ? c.getLong(0) : 0L; }
-        finally { c.close(); }
-    }
-
     public List<Photo> pending(AppPrefs prefs) {
         Set<String> albums = prefs.selectedAlbums();
         Set<String> sent = prefs.sentIds();
         List<Photo> out = new ArrayList<>();
-        if (albums.isEmpty() || prefs.pairedAt() == 0L) return out;
+        long pairedAt = prefs.pairedAt();
+        if (albums.isEmpty() || pairedAt == 0L) return out;
 
         String[] p = {
                 MediaStore.Images.Media._ID,
@@ -98,15 +89,19 @@ public class MediaRepo {
                 long id = c.getLong(iId);
                 String sid = String.valueOf(id);
                 String bid = c.getString(iBid);
-                if (!albums.contains(bid) || sent.contains(sid)) continue;
-                if (id <= prefs.albumBaselineId(bid)) continue;
+                long dateAddedMs = c.getLong(iDate) * 1000L;
+
+                if (!albums.contains(bid)) continue;
+                if (sent.contains(sid)) continue;
+                if (dateAddedMs < pairedAt) continue;
+
                 Photo ph = new Photo();
                 ph.id = id;
                 ph.name = c.getString(iName);
                 ph.mime = c.getString(iMime);
                 ph.bucketId = bid;
                 ph.bucketName = c.getString(iBn);
-                ph.dateAddedMs = c.getLong(iDate) * 1000L;
+                ph.dateAddedMs = dateAddedMs;
                 ph.size = c.getLong(iSize);
                 ph.uri = Uri.withAppendedPath(collection(), sid);
                 out.add(ph);
