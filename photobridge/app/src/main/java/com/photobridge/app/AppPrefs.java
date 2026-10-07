@@ -35,31 +35,7 @@ public class AppPrefs {
     }
 
     public void setSelectedAlbums(Set<String> ids) {
-        Set<String> old = selectedAlbums();
-        SharedPreferences.Editor e = sp.edit().putStringSet("albums", new HashSet<>(ids));
-        long now = System.currentTimeMillis();
-        long pair = pairedAt();
-        for (String id : ids) {
-            if (!old.contains(id)) {
-                long start = Math.max(pair, now);
-                e.putLong("albumStart_" + id, start);
-            }
-        }
-        e.apply();
-    }
-
-    public void setAlbumBaselineId(String id, long maxId) {
-        sp.edit().putLong("albumBaseId_" + id, maxId).apply();
-    }
-
-    public long albumBaselineId(String id) {
-        return sp.getLong("albumBaseId_" + id, 0L);
-    }
-
-    public long albumStart(String id) {
-        long p = pairedAt();
-        long v = sp.getLong("albumStart_" + id, 0L);
-        return v == 0L ? p : Math.max(v, p);
+        sp.edit().putStringSet("albums", new HashSet<>(ids)).apply();
     }
 
     public Set<String> sentIds() {
