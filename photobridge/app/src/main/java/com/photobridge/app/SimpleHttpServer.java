@@ -132,10 +132,6 @@ public class SimpleHttpServer {
         if (r.path.equals("/pair") && r.method.equals("POST")) {
             if (!auth(r)) { sendJson(out,403,new JSONObject().put("ok",false)); return; }
             long t = prefs.ensurePairedNow();
-            for (String albumId : prefs.selectedAlbums()) {
-                if (prefs.albumBaselineId(albumId) == 0L)
-                    prefs.setAlbumBaselineId(albumId, media.maxIdForAlbum(albumId));
-            }
             sendJson(out,200,new JSONObject().put("ok",true).put("pairedAt",t)); return;
         }
         if (!auth(r)) { sendJson(out,403,new JSONObject().put("ok",false).put("error","bad token")); return; }
@@ -148,12 +144,6 @@ public class SimpleHttpServer {
             JSONArray a = body.optJSONArray("ids");
             Set<String> ids = new HashSet<>();
             if (a != null) for(int i=0;i<a.length();i++) ids.add(a.getString(i));
-            Set<String> old = prefs.selectedAlbums();
-            if (prefs.pairedAt() > 0L) {
-                for (String id : ids) {
-                    if (!old.contains(id)) prefs.setAlbumBaselineId(id, media.maxIdForAlbum(id));
-                }
-            }
             prefs.setSelectedAlbums(ids);
             sendJson(out,200,new JSONObject().put("ok",true)); return;
         }
@@ -172,7 +162,7 @@ public class SimpleHttpServer {
             long id = Long.parseLong(r.path.substring("/photo/".length()));
             MediaRepo.Photo p = media.get(id);
             if (p == null) { send(out,404,"text/plain","not found".getBytes(StandardCharsets.UTF_8)); return; }
-            if (!prefs.selectedAlbums().contains(p.bucketId) || p.id <= prefs.albumBaselineId(p.bucketId)) {
+            if (!prefs.selectedAlbums().contains(p.bucketId) || p.dateAddedMs < prefs.pairedAt()) {
                 send(out,403,"text/plain","not eligible".getBytes(StandardCharsets.UTF_8)); return;
             }
             try (InputStream in = media.open(p)) {
