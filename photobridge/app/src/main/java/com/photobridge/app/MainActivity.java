@@ -17,7 +17,7 @@ import java.util.*;
 public class MainActivity extends Activity {
     private AppPrefs prefs;
     private TextView status;
-    private TextView selectedAlbumsText;
+    private TextView selectedAlbumsText;\n    private TextView pendingText;
     private JSONArray cachedAlbums = new JSONArray();
 
     @Override public void onCreate(Bundle b) {
@@ -127,14 +127,14 @@ public class MainActivity extends Activity {
     private void loadAlbums() {
         try {
             cachedAlbums = new MediaRepo(this).albums(prefs.selectedAlbums());
-            updateSelectedAlbumsText();
+            updateSelectedAlbumsText();\n            updatePendingText();
         } catch (Exception e) {
             cachedAlbums = new JSONArray();
             selectedAlbumsText.setText("앨범을 읽지 못했습니다. 사진 권한을 확인하세요.");
         }
     }
 
-    private void updateSelectedAlbumsText() {
+    private void updatePendingText() {\n        try {\n            int count = new MediaRepo(this).pending(prefs).size();\n            pendingText.setText("전송 대기 사진: " + count + "장");\n        } catch (Exception e) {\n            pendingText.setText("전송 대기 사진: 확인 실패");\n        }\n    }\n\n    private void updateSelectedAlbumsText() {
         Set<String> selected = prefs.selectedAlbums();
         if (selected.isEmpty()) {
             selectedAlbumsText.setText("선택된 앨범 없음");
@@ -187,14 +187,6 @@ public class MainActivity extends Activity {
                 dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(v -> {
                     Set<String> idsToSave = new HashSet<>();
                     for (int i=0; i<n; i++) if (checked[i]) idsToSave.add(ids[i]);
-
-                    Set<String> old = prefs.selectedAlbums();
-                    if (prefs.pairedAt() > 0L) {
-                        MediaRepo repo = new MediaRepo(this);
-                        for (String id : idsToSave) {
-                            if (!old.contains(id)) prefs.setAlbumBaselineId(id, repo.maxIdForAlbum(id));
-                        }
-                    }
 
                     prefs.setSelectedAlbums(idsToSave);
                     loadAlbums();
