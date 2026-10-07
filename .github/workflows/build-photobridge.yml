@@ -1,4 +1,5 @@
 name: Build PhotoBridge APK
+# rebuild album picker fix
 
 on:
   push:
