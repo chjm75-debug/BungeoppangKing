@@ -5,7 +5,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;\nimport android.net.Uri;\nimport android.provider.Settings;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.provider.Settings;
 import android.os.Bundle;
 import android.graphics.Typeface;
 import android.widget.*;
@@ -18,7 +20,8 @@ public class MainActivity extends Activity {
     private AppPrefs prefs;
     private TextView status;
     private TextView selectedAlbumsText;
-    private TextView pendingText;\n    private TextView permissionText;
+    private TextView pendingText;
+    private TextView permissionText;
     private JSONArray cachedAlbums = new JSONArray();
 
     @Override public void onCreate(Bundle b) {
@@ -96,7 +99,8 @@ public class MainActivity extends Activity {
         note.setPadding(0,18,0,0);
         root.addView(note);
 
-        setContentView(sv);\n        updatePermissionText();
+        setContentView(sv);
+        updatePermissionText();
     }
 
     private String pairText() {
