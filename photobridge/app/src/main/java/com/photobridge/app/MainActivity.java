@@ -5,7 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.pm.PackageManager;\nimport android.net.Uri;\nimport android.provider.Settings;
 import android.os.Bundle;
 import android.graphics.Typeface;
 import android.widget.*;
@@ -18,7 +18,7 @@ public class MainActivity extends Activity {
     private AppPrefs prefs;
     private TextView status;
     private TextView selectedAlbumsText;
-    private TextView pendingText;
+    private TextView pendingText;\n    private TextView permissionText;
     private JSONArray cachedAlbums = new JSONArray();
 
     @Override public void onCreate(Bundle b) {
@@ -96,13 +96,43 @@ public class MainActivity extends Activity {
         note.setPadding(0,18,0,0);
         root.addView(note);
 
-        setContentView(sv);
+        setContentView(sv);\n        updatePermissionText();
     }
 
     private String pairText() {
         long t = prefs.pairedAt();
         if (t == 0) return "아직 PC와 연결되지 않음 · 기존 사진은 전송 대상 아님";
         return "동기화 시작 기준: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA).format(new Date(t));
+    }
+
+    private boolean hasFullPhotoPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            return checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+        }
+        return checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void updatePermissionText() {
+        if (hasFullPhotoPermission()) {
+            permissionText.setText("사진 권한: 전체 사진 허용됨");
+        } else if (android.os.Build.VERSION.SDK_INT >= 34 &&
+                checkSelfPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED) {
+            permissionText.setText("사진 권한: 일부 사진만 허용됨 → 전체 사진 허용 필요");
+        } else {
+            permissionText.setText("사진 권한: 허용 필요");
+        }
+    }
+
+    private void openAppSettings() {
+        Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        i.setData(Uri.parse("package:" + getPackageName()));
+        startActivity(i);
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        if (permissionText != null) updatePermissionText();
+        if (hasFullPhotoPermission() && selectedAlbumsText != null) loadAlbums();
     }
 
     private void requestMediaPermission() {
@@ -122,7 +152,7 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 100) loadAlbums();
+        if (requestCode == 100) { updatePermissionText(); if (hasFullPhotoPermission()) loadAlbums(); }
     }
 
     private void loadAlbums() {
@@ -167,9 +197,13 @@ public class MainActivity extends Activity {
     private void openAlbumPicker() {
         loadAlbums();
 
+        if (!hasFullPhotoPermission()) {
+            Toast.makeText(this,"사진 권한을 '전체 사진 허용'으로 바꿔주세요.",Toast.LENGTH_LONG).show();
+            openAppSettings();
+            return;
+        }
         if (cachedAlbums.length() == 0) {
-            Toast.makeText(this,"앨범을 찾지 못했습니다. 사진 접근 권한을 허용한 뒤 다시 눌러주세요.",Toast.LENGTH_LONG).show();
-            requestMediaPermission();
+            Toast.makeText(this,"사진 권한은 허용됐지만 앨범을 찾지 못했습니다. 앱을 다시 열어주세요.",Toast.LENGTH_LONG).show();
             return;
         }
 
