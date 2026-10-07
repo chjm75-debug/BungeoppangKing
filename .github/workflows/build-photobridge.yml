@@ -1,5 +1,5 @@
 name: Build PhotoBridge APK
-# rebuild Samsung permission fix
+# rebuild Samsung permission fix v2
 
 on:
   push:
