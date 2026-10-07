@@ -3,12 +3,11 @@ package com.photobridge.app;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.provider.Settings;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.graphics.Typeface;
 import android.widget.*;
 import org.json.JSONArray;
@@ -21,16 +20,21 @@ public class MainActivity extends Activity {
     private TextView status;
     private TextView selectedAlbumsText;
     private TextView pendingText;
-    private TextView permissionText;
     private JSONArray cachedAlbums = new JSONArray();
 
     @Override public void onCreate(Bundle b) {
         super.onCreate(b);
         prefs = new AppPrefs(this);
         buildUi();
-        requestMediaPermission();
-        startForegroundService(new Intent(this, PhotoSyncService.class));
-        loadAlbums();
+
+        try {
+            startForegroundService(new Intent(this, PhotoSyncService.class));
+        } catch (Exception e) {
+            Toast.makeText(this, "동기화 서비스 시작 실패: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
+        if (hasPhotoPermission()) loadAlbums();
+        else requestMediaPermission();
     }
 
     private void buildUi() {
@@ -66,89 +70,68 @@ public class MainActivity extends Activity {
 
         status = new TextView(this);
         status.setText(pairText());
-        status.setPadding(0,8,0,24);
+        status.setPadding(0,8,0,20);
         root.addView(status);
-
-        TextView h = new TextView(this);
-        h.setText("동기화할 앨범");
-        h.setTextSize(18);
-        h.setTypeface(null,Typeface.BOLD);
-        root.addView(h);
 
         selectedAlbumsText = new TextView(this);
         selectedAlbumsText.setText("선택된 앨범 없음");
         selectedAlbumsText.setTextSize(16);
-        selectedAlbumsText.setPadding(0,10,0,14);
+        selectedAlbumsText.setPadding(0,6,0,10);
         root.addView(selectedAlbumsText);
+
+        pendingText = new TextView(this);
+        pendingText.setText("전송 대기 사진: 확인 중");
+        pendingText.setTextSize(16);
+        pendingText.setPadding(0,0,0,14);
+        root.addView(pendingText);
 
         Button choose = new Button(this);
         choose.setText("앨범 선택");
-        choose.setOnClickListener(v -> openAlbumPicker());
+        choose.setOnClickListener(v -> {
+            if (!hasPhotoPermission()) {
+                Toast.makeText(this,"사진 권한을 먼저 허용해주세요.",Toast.LENGTH_LONG).show();
+                requestMediaPermission();
+            } else {
+                openAlbumPicker();
+            }
+        });
         root.addView(choose);
+
+        Button settingsBtn = new Button(this);
+        settingsBtn.setText("사진 권한 설정 열기");
+        settingsBtn.setOnClickListener(v -> {
+            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:" + getPackageName()));
+            startActivity(i);
+        });
+        root.addView(settingsBtn);
 
         Button refresh = new Button(this);
         refresh.setText("앨범 목록 새로고침");
-        refresh.setOnClickListener(v -> {
-            loadAlbums();
-            Toast.makeText(this,"앨범 목록을 새로 불러왔습니다",Toast.LENGTH_SHORT).show();
-        });
+        refresh.setOnClickListener(v -> loadAlbums());
         root.addView(refresh);
 
         TextView note = new TextView(this);
-        note.setText("※ 처음 PC와 연결되기 전 사진은 전송하지 않습니다. 나중에 새 앨범을 추가하면 그 앨범도 추가한 시점 이후 사진부터 전송합니다.");
+        note.setText("※ PC 최초 연결 이전 사진은 전송하지 않습니다.");
         note.setPadding(0,18,0,0);
         root.addView(note);
 
         setContentView(sv);
-        updatePermissionText();
     }
 
-    private String pairText() {
-        long t = prefs.pairedAt();
-        if (t == 0) return "아직 PC와 연결되지 않음 · 기존 사진은 전송 대상 아님";
-        return "동기화 시작 기준: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA).format(new Date(t));
-    }
-
-    private boolean hasFullPhotoPermission() {
+    private boolean hasPhotoPermission() {
         if (android.os.Build.VERSION.SDK_INT >= 33) {
-            return checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+            return checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES)
+                    == PackageManager.PERMISSION_GRANTED;
         }
-        return checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void updatePermissionText() {
-        if (hasFullPhotoPermission()) {
-            permissionText.setText("사진 권한: 전체 사진 허용됨");
-        } else if (android.os.Build.VERSION.SDK_INT >= 34 &&
-                checkSelfPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED) {
-            permissionText.setText("사진 권한: 일부 사진만 허용됨 → 전체 사진 허용 필요");
-        } else {
-            permissionText.setText("사진 권한: 허용 필요");
-        }
-    }
-
-    private void openAppSettings() {
-        Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        i.setData(Uri.parse("package:" + getPackageName()));
-        startActivity(i);
-    }
-
-    @Override protected void onResume() {
-        super.onResume();
-        if (permissionText != null) updatePermissionText();
-        if (hasFullPhotoPermission() && selectedAlbumsText != null) loadAlbums();
+        return checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     private void requestMediaPermission() {
         if (android.os.Build.VERSION.SDK_INT >= 33) {
-            List<String> req = new ArrayList<>();
-            if (checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED)
-                req.add(Manifest.permission.READ_MEDIA_IMAGES);
-            if (android.os.Build.VERSION.SDK_INT >= 33 &&
-                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
-                req.add(Manifest.permission.POST_NOTIFICATIONS);
-            if (!req.isEmpty()) requestPermissions(req.toArray(new String[0]),100);
-        } else if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_MEDIA_IMAGES},100);
+        } else {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},100);
         }
     }
@@ -156,25 +139,44 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 100) { updatePermissionText(); if (hasFullPhotoPermission()) loadAlbums(); }
-    }
-
-    private void loadAlbums() {
-        try {
-            cachedAlbums = new MediaRepo(this).albums(prefs.selectedAlbums());
-            updateSelectedAlbumsText();
-            updatePendingText();
-        } catch (Exception e) {
-            cachedAlbums = new JSONArray();
-            selectedAlbumsText.setText("앨범을 읽지 못했습니다. 사진 권한을 확인하세요.");
+        if (requestCode == 100) {
+            if (hasPhotoPermission()) loadAlbums();
+            else {
+                selectedAlbumsText.setText("사진 권한이 필요합니다.");
+                pendingText.setText("전송 대기 사진: 권한 필요");
+            }
         }
     }
 
-    private void updatePendingText() {
+    @Override protected void onResume() {
+        super.onResume();
+        if (selectedAlbumsText != null && hasPhotoPermission()) loadAlbums();
+    }
+
+    private String pairText() {
+        long t = prefs.pairedAt();
+        if (t == 0) return "아직 PC와 연결되지 않음";
+        return "동기화 시작 기준: " +
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA)
+                        .format(new Date(t));
+    }
+
+    private void loadAlbums() {
+        if (!hasPhotoPermission()) {
+            cachedAlbums = new JSONArray();
+            selectedAlbumsText.setText("사진 권한이 필요합니다.");
+            pendingText.setText("전송 대기 사진: 권한 필요");
+            return;
+        }
+
         try {
+            cachedAlbums = new MediaRepo(this).albums(prefs.selectedAlbums());
+            updateSelectedAlbumsText();
             int count = new MediaRepo(this).pending(prefs).size();
             pendingText.setText("전송 대기 사진: " + count + "장");
-        } catch (Exception e) {
+        } catch(Exception e) {
+            cachedAlbums = new JSONArray();
+            selectedAlbumsText.setText("앨범 읽기 실패: " + e.getClass().getSimpleName());
             pendingText.setText("전송 대기 사진: 확인 실패");
         }
     }
@@ -188,26 +190,23 @@ public class MainActivity extends Activity {
 
         List<String> names = new ArrayList<>();
         try {
-            for (int i=0; i<cachedAlbums.length(); i++) {
+            for(int i=0;i<cachedAlbums.length();i++) {
                 JSONObject o = cachedAlbums.getJSONObject(i);
                 if (selected.contains(o.getString("id"))) names.add(o.getString("name"));
             }
-        } catch (Exception ignored) {}
+        } catch(Exception ignored) {}
 
-        if (names.isEmpty()) selectedAlbumsText.setText("선택된 앨범 " + selected.size() + "개");
-        else selectedAlbumsText.setText("선택됨: " + android.text.TextUtils.join(", ", names));
+        selectedAlbumsText.setText(names.isEmpty()
+                ? "선택된 앨범 " + selected.size() + "개"
+                : "선택됨: " + android.text.TextUtils.join(", ", names));
     }
 
     private void openAlbumPicker() {
         loadAlbums();
-
-        if (!hasFullPhotoPermission()) {
-            Toast.makeText(this,"사진 권한을 '전체 사진 허용'으로 바꿔주세요.",Toast.LENGTH_LONG).show();
-            openAppSettings();
-            return;
-        }
         if (cachedAlbums.length() == 0) {
-            Toast.makeText(this,"사진 권한은 허용됐지만 앨범을 찾지 못했습니다. 앱을 다시 열어주세요.",Toast.LENGTH_LONG).show();
+            Toast.makeText(this,
+                    "앨범을 읽지 못했습니다. '사진 권한 설정 열기'에서 사진 권한을 허용해주세요.",
+                    Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -218,35 +217,32 @@ public class MainActivity extends Activity {
             boolean[] checked = new boolean[n];
             Set<String> selected = prefs.selectedAlbums();
 
-            for (int i=0; i<n; i++) {
+            for(int i=0;i<n;i++) {
                 JSONObject o = cachedAlbums.getJSONObject(i);
                 names[i] = o.getString("name");
                 ids[i] = o.getString("id");
                 checked[i] = selected.contains(ids[i]);
             }
 
-            AlertDialog dialog = new AlertDialog.Builder(this)
+            new AlertDialog.Builder(this)
                     .setTitle("동기화할 앨범 선택")
-                    .setMultiChoiceItems(names, checked, (d, which, isChecked) -> checked[which] = isChecked)
+                    .setMultiChoiceItems(names, checked,
+                            (d, which, isChecked) -> checked[which] = isChecked)
                     .setNegativeButton("취소", null)
-                    .setPositiveButton("확인", null)
-                    .create();
-
-            dialog.setOnShowListener(x -> {
-                dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(v -> {
-                    Set<String> idsToSave = new HashSet<>();
-                    for (int i=0; i<n; i++) if (checked[i]) idsToSave.add(ids[i]);
-
-                    prefs.setSelectedAlbums(idsToSave);
-                    loadAlbums();
-                    Toast.makeText(this, idsToSave.size() + "개 앨범을 선택했습니다", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                });
-            });
-
-            dialog.show();
-        } catch (Exception e) {
-            Toast.makeText(this,"앨범 선택 화면을 열지 못했습니다: " + e.getMessage(),Toast.LENGTH_LONG).show();
+                    .setPositiveButton("확인", (d,w) -> {
+                        Set<String> save = new HashSet<>();
+                        for(int i=0;i<n;i++) if(checked[i]) save.add(ids[i]);
+                        prefs.setSelectedAlbums(save);
+                        loadAlbums();
+                        Toast.makeText(this,
+                                save.size() + "개 앨범을 선택했습니다",
+                                Toast.LENGTH_SHORT).show();
+                    })
+                    .show();
+        } catch(Exception e) {
+            Toast.makeText(this,
+                    "앨범 선택 오류: " + e.getClass().getSimpleName(),
+                    Toast.LENGTH_LONG).show();
         }
     }
 }
