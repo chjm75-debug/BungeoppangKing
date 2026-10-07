@@ -17,7 +17,8 @@ import java.util.*;
 public class MainActivity extends Activity {
     private AppPrefs prefs;
     private TextView status;
-    private TextView selectedAlbumsText;\n    private TextView pendingText;
+    private TextView selectedAlbumsText;
+    private TextView pendingText;
     private JSONArray cachedAlbums = new JSONArray();
 
     @Override public void onCreate(Bundle b) {
@@ -127,14 +128,24 @@ public class MainActivity extends Activity {
     private void loadAlbums() {
         try {
             cachedAlbums = new MediaRepo(this).albums(prefs.selectedAlbums());
-            updateSelectedAlbumsText();\n            updatePendingText();
+            updateSelectedAlbumsText();
+            updatePendingText();
         } catch (Exception e) {
             cachedAlbums = new JSONArray();
             selectedAlbumsText.setText("앨범을 읽지 못했습니다. 사진 권한을 확인하세요.");
         }
     }
 
-    private void updatePendingText() {\n        try {\n            int count = new MediaRepo(this).pending(prefs).size();\n            pendingText.setText("전송 대기 사진: " + count + "장");\n        } catch (Exception e) {\n            pendingText.setText("전송 대기 사진: 확인 실패");\n        }\n    }\n\n    private void updateSelectedAlbumsText() {
+    private void updatePendingText() {
+        try {
+            int count = new MediaRepo(this).pending(prefs).size();
+            pendingText.setText("전송 대기 사진: " + count + "장");
+        } catch (Exception e) {
+            pendingText.setText("전송 대기 사진: 확인 실패");
+        }
+    }
+
+    private void updateSelectedAlbumsText() {
         Set<String> selected = prefs.selectedAlbums();
         if (selected.isEmpty()) {
             selectedAlbumsText.setText("선택된 앨범 없음");
